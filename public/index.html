@@ -56,7 +56,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <div id="app" style="display:none"></div>
 
 <script>
-// ── CONFIGURACIÓN SUPABASE ──────────────────────────────────────────────────
+// ── CONFIGURACIÓN E AUTENTICACIÓN BLINDADA (SUPABASE) ──────────────────────
 const SUPABASE_URL = "https://gnzqvwmwvsfjjwvzqcjy.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA5MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
 
@@ -72,23 +72,48 @@ async function checkAuth() {
     if (session && session.user) {
       document.getElementById("auth-gate").style.display = "none";
       document.getElementById("app").style.display = "block";
-      r(); // SÓ renderiza a app se a autenticación é válida
+      r();
     } else {
-      document.getElementById("auth-gate").style.display = "flex";
-      document.getElementById("app").style.display = "none";
+      showLoginGate();
     }
   } catch (err) {
-    console.error("Erro na verificación da autenticación:", err);
+    console.error("Erro na verificación da sesión:", err);
+    showLoginGate();
+  }
+}
+
+function showLoginGate() {
+  document.getElementById("app").style.display = "none";
+  document.getElementById("auth-gate").style.display = "flex";
+
+  const emailInput = document.getElementById("auth-email");
+  const passInput = document.getElementById("auth-password");
+  const errBox = document.getElementById("auth-error");
+  const btn = document.getElementById("btn-login");
+
+  if (emailInput) emailInput.value = "";
+  if (passInput) passInput.value = "";
+  if (errBox) {
+    errBox.style.display = "none";
+    errBox.textContent = "";
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Acceder ao Panel";
   }
 }
 
 async function handleAuth(e) {
   e.preventDefault();
   if (!_supabase) return;
-  const email = document.getElementById("auth-email").value.trim().toLowerCase();
-  const password = document.getElementById("auth-password").value;
+
+  const emailInput = document.getElementById("auth-email");
+  const passInput = document.getElementById("auth-password");
   const errBox = document.getElementById("auth-error");
   const btn = document.getElementById("btn-login");
+
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passInput.value;
 
   errBox.style.display = "none";
   btn.disabled = true;
@@ -113,9 +138,21 @@ async function handleAuth(e) {
 }
 
 async function logout() {
-  if (_supabase) await _supabase.auth.signOut();
-  document.getElementById("auth-gate").style.display = "flex";
-  document.getElementById("app").style.display = "none";
+  showLoginGate();
+  try {
+    if (_supabase) {
+      await Promise.race([
+        _supabase.auth.signOut(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
+      ]);
+    }
+  } catch (err) {
+    console.warn("Peche de sesión completado localmente:", err.message);
+  } finally {
+    for (let key in localStorage) {
+      if (key.startsWith("sb-")) localStorage.removeItem(key);
+    }
+  }
 }
 
 // ── DATOS PROTOCOLOS (100% GALEGO NORMATIVO) ────────────────────────────────
@@ -130,7 +167,7 @@ const PERFILES=[
 ];
 
 const NECESIDADES={
-  TDAH:["Dificultade para manter a atención","Impulsividade","Desorganización","Exceso de actividade motora","Dificultade para seguir instrucións longas","Esquecementos frecuentes","Baixa tolerancia á frustración"],
+  TDAH:["Dificultade para manter a atención","Impulsividade","Desorganización","Excesso de actividade motora","Dificultade para seguir instrucións longas","Esquecementos frecuentes","Baixa tolerancia á frustración"],
   TEA: ["Dificultade na comunicación social","Necesidade de rutinas fixas","Sensibilidade sensorial","Dificultade con cambios inesperados","Procesamento literal da linguaxe","Intereses moi específicos","Dificultade co traballo en grupo"],
   DEA: ["Dislexia (lectura)","Disgrafía (escritura)","Discalculia (matemáticas)","Velocidade de procesamento lenta","Memoria de traballo reducida","Dificultade con comprensión lectora","Confusión de letras/números"],
   DI:  ["Dificultade no razoamento abstracto","Ritmo de aprendizaxe lento","Limitacións na comprensión lectora","Dificultade na xeneralización","Necesidade de aprendizaxe funcional","Vocabulario reducido","Dificultade na resolución de problemas"],
@@ -262,7 +299,7 @@ function html(){
     body=`<div style="text-align:center;padding:60px 20px">
       <div style="font-size:50px;margin-bottom:16px" class="pulse">🧠</div>
       <h3 style="font-weight:800;color:#1E3A5F;font-size:20px;margin-bottom:8px">Xerando documentos...</h3>
-      <p style="color:#64748B;font-size:14px">Creating ${S.docs.length} documento${S.docs.length>1?"s":""} personalizados en galego normativo</p>
+      <p style="color:#64748B;font-size:14px">Creando ${S.docs.length} documento${S.docs.length>1?"s":""} personalizados en galego normativo</p>
       <div style="display:flex;justify-content:center;gap:6px;margin-top:18px">
         <div class="dot dot1"></div><div class="dot dot2"></div><div class="dot dot3"></div>
       </div>
