@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AdaptacionsNEAE v.25 - Acceso Seguro</title>
+  <title>AdaptacionsNEAE v.25 - IA Asistente</title>
 
   <!-- Tailwind CSS, Fontes e Iconas -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -67,7 +67,7 @@
       <div class="max-w-3xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-            <i data-lucide="sliders" class="w-6 h-6 text-white"></i>
+            <i data-lucide="sparkles" class="w-6 h-6 text-amber-300"></i>
           </div>
           <div>
             <h1 class="font-display text-xl font-bold leading-tight">AdaptacionsNEAE v.25</h1>
@@ -84,7 +84,7 @@
     <div class="sticky top-0 z-30 px-4 py-2 bg-slate-100 border-b border-slate-200">
       <div class="max-w-3xl mx-auto flex gap-2">
         <button onclick="switchTab('form')" id="tab-form" class="tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 bg-blue-700 text-white">
-          <i data-lucide="plus-circle" class="w-4 h-4"></i> Rexistrar Medidas
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Asistente NEAE
         </button>
         <button onclick="switchTab('history')" id="tab-history" class="tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 text-blue-800 hover:bg-blue-50">
           <i data-lucide="list-checks" class="w-4 h-4"></i> Historial
@@ -95,14 +95,14 @@
       </div>
     </div>
 
-    <!-- PESTANA 1: FORMULARIO NEAE -->
+    <!-- PESTANA 1: FORMULARIO DINÁMICO NEAE -->
     <div id="view-form" class="px-4 py-5 fade-in">
       <div class="max-w-3xl mx-auto space-y-4">
 
-        <!-- DATOS ALUMNO/A -->
+        <!-- PASO 1: DATOS ALUMNO/A E PERFIL -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
           <h3 class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center gap-1.5">
-            <i data-lucide="user" class="w-4 h-4"></i> Identificación do Alumnado
+            <i data-lucide="user" class="w-4 h-4"></i> 1. Identificación e Perfil Inicial
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
@@ -115,7 +115,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold mb-1 text-slate-700">Curso</label>
-              <select id="inp-course" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50">
+              <select id="inp-course" onchange="updateDynamicOptions()" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50">
                 <option value="">Selecciona...</option>
                 <optgroup label="Infantil">
                   <option value="4º EI">4º EI</option>
@@ -140,87 +140,76 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold mb-1 text-slate-700">Perfil / Tipoloxía NEAE</label>
-              <select id="inp-neae-type" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50">
-                <option value="NEE - Discapacidade / Trastorno">NEE (Discapacidade / TEA / Conducta)</option>
-                <option value="DEA - Dificultades Específicas Aprendizaxe">DEA (Dislexia / TDAH / Cálculo)</option>
+              <label class="block text-xs font-semibold mb-1 text-slate-700">Perfil NEAE</label>
+              <select id="inp-neae-type" onchange="updateDynamicOptions()" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50">
+                <option value="TDAH">TDAH / Inatención / Impulsividade</option>
+                <option value="NEE - Discapacidade / Trastorno">NEE (TEA / Conducta / Sensorial)</option>
+                <option value="DEA - Dificultades Específicas Aprendizaxe">DEA (Dislexia / Discalculia)</option>
                 <option value="ALAIN - Altas Capacidades">Altas Capacidades (ALAIN)</option>
-                <option value="TDAH">TDAH</option>
                 <option value="Incorporación Tardía">Incorporación Tardía / Lingua</option>
-                <option value="Condicións Persoais / Historia Escolar">Condicións Persoais / Vulnerabilidade</option>
+                <option value="Vulnerabilidade / Historia Escolar">Vulnerabilidade / Condicións Persoais</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- MATERIAS E TIPOS DE ADAPTACIÓN -->
+        <!-- PASO 2: CARACTERÍSTICAS ESPECÍFICAS DO ALUMNO/A -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
           <h3 class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center gap-1.5">
-            <i data-lucide="book-open" class="w-4 h-4"></i> Áreas / Materias e Tipos de Medida
+            <i data-lucide="brain" class="w-4 h-4"></i> 2. Características Observadas no Alumno/a (IA Asistente)
           </h3>
+          <p class="text-xs text-slate-500 mb-2">Marca as características principais para que o motor xere a lista de cotexo e estratexias recomendadas:</p>
 
-          <div>
-            <label class="block text-xs font-semibold mb-1.5 text-slate-700">Materias afectadas:</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Galego" class="sub-check rounded text-blue-600"> Galego</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Castelán" class="sub-check rounded text-blue-600"> Castelán</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Matemáticas" class="sub-check rounded text-blue-600"> Matemáticas</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Inglés" class="sub-check rounded text-blue-600"> Inglés</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Ciencias" class="sub-check rounded text-blue-600"> Ciencias</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Música/Plástica" class="sub-check rounded text-blue-600"> Artística</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Ed. Física" class="sub-check rounded text-blue-600"> Ed. Física</label>
-              <label class="flex items-center gap-1.5"><input type="checkbox" data-subject="Tódalas Áreas" class="sub-check rounded text-blue-600"> 🌐 Tódalas áreas</label>
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="features-container">
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Movemento excesivo / Inquedanza motora" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 🏃 Movemento excesivo / Inquedanza</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Dificultade para manter a atención sostida" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 👀 Dificultade de atención sostida</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Impulsividade / Dificultade de autorregulación" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> ⚡ Impulsividade / Baixa tolerancia frustración</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Lentitude na execución / Procesamento lento" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> ⏳ Lentitude no procesamento / execución</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Dificultades na lectura / comprensión lectora" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 📖 Dificultade en comprensión lectora</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Rigidez cognitiva / Dificultade nos cambios" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 🧱 Rigidez / Dificultade ante cambios</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Sensibilidade sensorial / Sobrecarga" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 🎧 Sensibilidade sensorial / Ruído</label>
+            <label class="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 hover:bg-blue-50 cursor-pointer"><input type="checkbox" data-feat="Ata mañá / Desmotivación rápida" onchange="generateDynamicChecklist()" class="feat-check rounded text-blue-600"> 🥱 Desmotivación / Bloqueo inicial</label>
           </div>
 
           <div class="pt-2">
-            <label class="block text-xs font-semibold mb-1.5 text-slate-700">Tipos de medidas aplicadas (podes marcar varias):</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <label class="flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 bg-slate-50"><input type="checkbox" data-measure="Acceso ao Currículo" class="measure-check rounded text-blue-600"> ♿ Medidas de Acceso</label>
-              <label class="flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 bg-slate-50"><input type="checkbox" data-measure="Metodolóxicas / Organizativas" class="measure-check rounded text-blue-600"> 🧠 Metodolóxicas</label>
-              <label class="flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 bg-slate-50"><input type="checkbox" data-measure="Avaliación Adaptada" class="measure-check rounded text-blue-600"> 📝 Avaliación</label>
-            </div>
+            <input type="text" id="inp-custom-feat" oninput="generateDynamicChecklist()" placeholder="Outras características específicas..." class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50">
           </div>
         </div>
 
-        <!-- LISTA DE COTEXO / ESTRATEXIAS E MATERIAIS -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center gap-1.5">
-            <i data-lucide="check-square" class="w-4 h-4"></i> Lista de Cotexo: Estratexias e Materiais Utilizados
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Apoios visuais / Pictogramas" class="strat-check rounded text-blue-600"> 🖼️ Apoios visuais / Pictogramas</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Adaptación de textos / Lectura fácil" class="strat-check rounded text-blue-600"> 📖 Adaptación de textos / Lectura fácil</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Uso de calculadora / Material manipulativo" class="strat-check rounded text-blue-600"> 🧮 Calculadora / Material manipulativo</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Tempo adicional nas avaliacións" class="strat-check rounded text-blue-600"> ⏱️ Tempo adicional nas avaliacións</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Exames orais / Lectura de preguntas" class="strat-check rounded text-blue-600"> 🗣️ Exames orais / Lectura de preguntas</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Fraccionamento de tarefas en pasos" class="strat-check rounded text-blue-600"> ✂️ Fraccionamento de tarefas en pasos</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Uso de TIC / Formato dixital" class="strat-check rounded text-blue-600"> 💻 Uso de TIC / Formato dixital</label>
-            <label class="flex items-center gap-2"><input type="checkbox" data-strat="Ubicación preferente na aula" class="strat-check rounded text-blue-600"> 🪑 Ubicación preferente na aula</label>
+        <!-- PASO 3: LISTA DE COTEXO DINÁMICA E XERADA -->
+        <div class="bg-white rounded-2xl p-5 border border-amber-200 bg-amber-50/30 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+              <i data-lucide="check-square" class="w-4 h-4 text-amber-600"></i> 3. Lista de Cotexo Adaptativa (Suxerida automaticamente)
+            </h3>
+            <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-bold">IA Asistente</span>
           </div>
 
-          <div class="pt-3 border-t flex items-center justify-between">
-            <span class="text-xs font-semibold text-slate-700">Avaliación da eficacia destas estratexias:</span>
-            <select id="inp-efficacy" class="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold bg-slate-50">
-              <option value="Eficaz (Funciona correctamente)">🟢 Eficaz (Funciona)</option>
-              <option value="En proceso / Axustes">🟡 En proceso / Axustes</option>
-              <option value="Non eficaz (Cambiar)">🔴 Non eficaz (Cambiar)</option>
+          <div id="dynamic-checklist-container" class="space-y-2 text-xs">
+            <p class="text-slate-500 italic">Selecciona as características do alumno/a no paso anterior para xerar a lista de cotexo personalizada...</p>
+          </div>
+
+          <div class="pt-3 border-t border-amber-200 flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-700">Avaliación xeral da eficacia:</span>
+            <select id="inp-efficacy" class="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold bg-white">
+              <option value="🟢 Eficaz (Mellora a participación e rendemento)">🟢 Eficaz (Funciona)</option>
+              <option value="🟡 En proceso (Necesita axustes metodolóxicos)">🟡 En proceso / Axustes</option>
+              <option value="🔴 Non eficaz (Precisa revisión de estratexia)">🔴 Non eficaz (Revisar)</option>
             </select>
           </div>
         </div>
 
-        <!-- SEGUIMENTO ESCRITO E OBSERVACIÓNS -->
+        <!-- PASO 4: SEGUIMENTO ESCRITO -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
           <label for="inp-obs" class="block text-xs font-bold uppercase tracking-wider text-blue-800">
-            📝 Seguimento Escrito / Observacións Pedagóxicas
+            📝 4. Seguimento Escrito e Observacións
           </label>
-          <textarea id="inp-obs" rows="3" placeholder="Anota o seguimento da xornada, dificultades atopadas ou progresos..." class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50 resize-none"></textarea>
+          <textarea id="inp-obs" rows="3" placeholder="Anota como transcorreu a xornada, a resposta ás estratexias aplicadas ou incidencias relevantes..." class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50 resize-none"></textarea>
         </div>
 
         <button onclick="submitRecord()" class="w-full py-3.5 rounded-2xl text-white font-semibold text-sm shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-blue-700 to-blue-600 hover:opacity-95">
           <i data-lucide="save" class="w-5 h-5"></i>
-          <span>Gardar Rexistro NEAE</span>
+          <span>Gardar Rexistro Personalizado</span>
         </button>
 
       </div>
@@ -271,13 +260,13 @@
             <textarea id="edit-header" rows="4" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50"></textarea>
           </div>
 
-          <div id="block-measures" class="hidden">
-            <label class="block text-xs font-semibold text-slate-700 mb-1">📐 Medidas e Materias Afectadas:</label>
-            <textarea id="edit-measures" rows="4" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50"></textarea>
+          <div id="block-features" class="hidden">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">🧠 Características e Necesidades Identificadas:</label>
+            <textarea id="edit-features" rows="3" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50"></textarea>
           </div>
 
           <div id="block-strats" class="hidden">
-            <label class="block text-xs font-semibold text-slate-700 mb-1">🛠️ Estratexias e Materiais (Lista de Cotexo):</label>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">🛠️ Estratexias, Materiais e Avaliación da Eficacia:</label>
             <textarea id="edit-strats" rows="4" class="w-full rounded-xl border border-slate-200 p-3 text-sm bg-slate-50"></textarea>
           </div>
 
@@ -314,6 +303,60 @@
     let allRecords = [];
     let currentUser = null;
     let isAdmin = false;
+
+    // MOTOR DE IA / REGRAS DINÁMICAS SEGUNDO CARACTERÍSTICAS
+    const strategyCatalog = [
+      { trigger: 'Movemento excesivo / Inquedanza motora', items: ['🪑 Asento dinámico / pelota de pilates', '⏸️ Descansos de movemento programados (brain breaks)', '✂️ Tarefas con desprazamento funcional na aula', '🧘 Estratexias de autorregulación motora'] },
+      { trigger: 'Dificultade para manter a atención sostida', items: ['🖼️ Apoios visuais / Organizadores de tarefas paso a paso', '⏱️ Uso de temporizador visual (Time Timer)', '🪑 Ubicación preferente libre de distraccións', '📝 Instrucións curtas, de unha en unha e con verificación de comprensión'] },
+      { trigger: 'Impulsividade / Dificultade de autorregulación', items: ['⭐ Rexistro de reforzo positivo inmediato', '🚦 Semáforo de autorregulación emocional', '⏸️ Estratexia de "Pausa e Respira" antes de responder', '🤝 Anticipación visual das transicións entre actividades'] },
+      { trigger: 'Lentitude na execución / Procesamento lento', items: ['⏱️ Tempo adicional nas avaliacións e tarefas escritas', '✂️ Redución do número de exercicios mantendo o obxectivo clave', '💻 Uso de procesador de texto / formato dixital', '🗣️ Exames orais ou lectura de preguntas por parte do docente'] },
+      { trigger: 'Dificultades na lectura / comprensión lectora', items: ['📖 Textos adaptados a Lectura Fácil / Tipografía clara', '🎧 Apoio de audio / Lector de pantalla', '🖼️ Acompañamento de pictogramas e esquemas visuais', '✍️ Resaltado previo de palabras clave e preguntas'] },
+      { trigger: 'Rigidez cognitiva / Dificultade nos cambios', items: ['📅 Horario visual de aula estructurado e anticipado', '⚠️ Avisos previos ante calquera cambio de rutina', '🧱 Estrutura fixa e predible nas sesións de traballo', '🤝 Obxecto de transición ou zona de sele-calma'] },
+      { trigger: 'Sensibilidade sensorial / Sobrecarga', items: ['🎧 Auriculares de cancelación de ruído nas fases de concentración', '🧘 Rincón de relaxación / baixa estimulación', '💡 Control da iluminación e espazo de traballo tranquilo', '✍️ Flexibilidade no uso de materiais de escritura'] },
+      { trigger: 'Ata mañá / Desmotivación rápida', items: ['🎯 Economía de fichas con obxectivos moi curtos', '🌟 Reforzo inmediato do esforzo (non só do resultado)', '🧩 Elección entre dúas opcións de tarefa equivalentes', '🤝 Padriño/Madriña de aula para inicio de tarefa'] }
+    ];
+
+    function updateDynamicOptions() {
+      generateDynamicChecklist();
+    }
+
+    function generateDynamicChecklist() {
+      const container = document.getElementById('dynamic-checklist-container');
+      const selectedFeatures = Array.from(document.querySelectorAll('.feat-check:checked')).map(c => c.dataset.feat);
+      const customFeat = document.getElementById('inp-custom-feat').value.trim();
+
+      if (selectedFeatures.length === 0 && !customFeat) {
+        container.innerHTML = '<p class="text-slate-500 italic">Selecciona as características do alumno/a no paso anterior para xerar a lista de cotexo personalizada...</p>';
+        return;
+      }
+
+      let suggestedItems = new Set();
+      selectedFeatures.forEach(feat => {
+        const found = strategyCatalog.find(s => s.trigger === feat);
+        if (found) {
+          found.items.forEach(i => suggestedItems.add(i));
+        }
+      });
+
+      // Se non hai nada específico pero hai texto libre
+      if (suggestedItems.size === 0) {
+        suggestedItems.add('🖼️ Apoios visuais e adaptación do contorno');
+        suggestedItems.add('⏱️ Flexibilidade de tempos');
+        suggestedItems.add('⭐ Reforzo positivo sistemático');
+      }
+
+      let html = '<p class="font-semibold text-amber-950 mb-2">Estratexias e materiais recomendados (Marca os aplicados hoxe):</p>';
+      Array.from(suggestedItems).forEach((item, index) => {
+        html += `
+          <label class="flex items-center gap-2 p-2 rounded-lg border border-amber-200 bg-white hover:bg-amber-100/50 cursor-pointer">
+            <input type="checkbox" data-strat="${item}" class="dyn-strat-check rounded text-amber-700" checked>
+            <span class="text-slate-800 font-medium">${item}</span>
+          </label>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
 
     async function checkAuth() {
       if (!_supabase) return;
@@ -439,9 +482,11 @@
       if (!course) { showToast('Selecciona o curso'); return; }
       if (!date) { showToast('Selecciona a data'); return; }
 
-      const subjects = Array.from(document.querySelectorAll('.sub-check:checked')).map(c => c.dataset.subject);
-      const measures = Array.from(document.querySelectorAll('.measure-check:checked')).map(c => c.dataset.measure);
-      const strats = Array.from(document.querySelectorAll('.strat-check:checked')).map(c => c.dataset.strat);
+      const selectedFeats = Array.from(document.querySelectorAll('.feat-check:checked')).map(c => c.dataset.feat);
+      const customFeat = document.getElementById('inp-custom-feat').value.trim();
+      if (customFeat) selectedFeats.push(customFeat);
+
+      const strats = Array.from(document.querySelectorAll('.dyn-strat-check:checked')).map(c => c.dataset.strat);
 
       const record = {
         id: Date.now().toString(),
@@ -449,8 +494,7 @@
         date: date,
         student_initials: `${initials} (${course})`,
         neae_type: document.getElementById('inp-neae-type').value,
-        subjects: subjects.join(', '),
-        measures: measures.join(', '),
+        features: selectedFeats.join(', '),
         strategies: strats.join(', '),
         efficacy: document.getElementById('inp-efficacy').value,
         observation: document.getElementById('inp-obs').value.trim()
@@ -458,15 +502,17 @@
 
       allRecords.unshift(record);
       saveLocalData();
-      showToast('✅ Rexistro NEAE gardado');
+      showToast('✅ Rexistro NEAE gardado correctamente');
       resetForm();
     }
 
     function resetForm() {
       document.getElementById('inp-initials').value = '';
       document.getElementById('inp-course').value = '';
+      document.getElementById('inp-custom-feat').value = '';
       document.getElementById('inp-obs').value = '';
-      document.querySelectorAll('.sub-check, .measure-check, .strat-check').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.feat-check').forEach(cb => cb.checked = false);
+      generateDynamicChecklist();
       document.getElementById('inp-date').valueAsDate = new Date();
     }
 
@@ -509,7 +555,7 @@
                   ${studentKey}
                 </div>
                 <div>
-                  <p class="font-bold text-slate-800 text-sm">${studentKey} <span class="ml-2 text-xs font-normal text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">${studentRecords.length} entradas</span></p>
+                  <p class="font-bold text-slate-800 text-sm">${studentKey} <span class="ml-2 text-xs font-normal text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">${studentRecords.length} rexistros</span></p>
                   <p class="text-xs text-slate-500">Última revisión: <strong>${lastRec.date}</strong> · Perfil: ${lastRec.neae_type}</p>
                 </div>
               </div>
@@ -523,10 +569,9 @@
                     <span>📅 Data: ${rec.date} (${rec.user_email})</span>
                     <button onclick="deleteRecord('${rec.id}')" class="text-red-500 hover:text-red-700">Eliminar</button>
                   </div>
-                  <p><strong>Áreas:</strong> ${rec.subjects || 'N/A'}</p>
-                  <p><strong>Medidas:</strong> ${rec.measures || 'N/A'}</p>
-                  ${rec.strategies ? `<p class="bg-blue-50 p-1.5 rounded text-blue-900">🛠️ <strong>Estratexias:</strong> ${rec.strategies}</p>` : ''}
-                  <p><strong>Eficacia:</strong> <span class="font-semibold">${rec.efficacy}</span></p>
+                  ${rec.features ? `<p>🧠 <strong>Características:</strong> ${rec.features}</p>` : ''}
+                  ${rec.strategies ? `<p class="bg-amber-50 p-1.5 rounded text-amber-900 border border-amber-200">🛠️ <strong>Estratexias aplicadas:</strong> ${rec.strategies}</p>` : ''}
+                  <p><strong>Avaliación Eficacia:</strong> <span class="font-semibold">${rec.efficacy}</span></p>
                   ${rec.observation ? `<p class="bg-slate-50 p-2 rounded border text-slate-600">📝 <strong>Seguimento:</strong> ${rec.observation}</p>` : ''}
                 </div>
               `).join('')}
@@ -575,27 +620,27 @@
 
       const lastRec = studentRecords[0];
 
-      document.getElementById('edit-header').value = `INFORME DE MEDIDAS DE APOIO E ADAPTACIÓNS NEAE\n\nAlumno/a: ${student}\nTipoloxía NEAE: ${lastRec.neae_type}\nData de informe: ${new Date().toLocaleDateString('gl-ES')}`;
+      document.getElementById('edit-header').value = `INFORME DE MEDIDAS DE APOIO E ADAPTACIÓNS NEAE\n\nAlumno/a: ${student}\nTipoloxía NEAE principal: ${lastRec.neae_type}\nData do informe: ${new Date().toLocaleDateString('gl-ES')}`;
 
-      // Medidas
-      const measuresList = studentRecords.map(r => `• [${r.date}] Áreas: ${r.subjects} | Medidas: ${r.measures}`).filter(Boolean);
-      if (measuresList.length > 0) {
-        document.getElementById('edit-measures').value = measuresList.join('\n');
-        document.getElementById('block-measures').classList.remove('hidden');
+      // Características
+      const featList = studentRecords.map(r => r.features ? `• [${r.date}] ${r.features}` : '').filter(Boolean);
+      if (featList.length > 0) {
+        document.getElementById('edit-features').value = featList.join('\n');
+        document.getElementById('block-features').classList.remove('hidden');
       } else {
-        document.getElementById('block-measures').classList.add('hidden');
+        document.getElementById('block-features').classList.add('hidden');
       }
 
-      // Estratexias (Lista de cotexo)
-      const stratList = studentRecords.map(r => r.strategies ? `• [${r.date}] ${r.strategies} (${r.efficacy})` : '').filter(Boolean);
+      // Estratexias e Eficacia
+      const stratList = studentRecords.map(r => r.strategies ? `• [${r.date}] Estratexias: ${r.strategies}\n  Resultado: ${r.efficacy}` : '').filter(Boolean);
       if (stratList.length > 0) {
-        document.getElementById('edit-strats').value = stratList.join('\n');
+        document.getElementById('edit-strats').value = stratList.join('\n\n');
         document.getElementById('block-strats').classList.remove('hidden');
       } else {
         document.getElementById('block-strats').classList.add('hidden');
       }
 
-      // Observacións
+      // Seguimento Escrito
       const obsList = studentRecords.map(r => r.observation ? `• [${r.date}] ${r.observation}` : '').filter(Boolean);
       if (obsList.length > 0) {
         document.getElementById('edit-obs').value = obsList.join('\n');
@@ -604,7 +649,7 @@
         document.getElementById('block-obs').classList.add('hidden');
       }
 
-      document.getElementById('edit-footer').value = `Orientacións de seguimento:\nContinuar coa aplicación das medidas ordinarias e metodolóxicas acordadas, revisando a eficacia nas sesións de avaliación.\n\nAtentamente,\nO equipo docente / Orientación educativa.`;
+      document.getElementById('edit-footer').value = `Orientacións de seguimento:\nContinuar coa aplicación das estratexias dinámicas validadas como eficaces, axustando os apoios metodolóxicos segundo a evolución nas sesións de avaliación.\n\nAtentamente,\nO equipo docente / Orientación educativa.`;
 
       document.getElementById('report-title').textContent = `Informe NEAE - ${student}`;
       document.getElementById('report-subtitle').textContent = `Xerado o ${new Date().toLocaleDateString('gl-ES')} (Orde cronolóxica descendente)`;
@@ -614,11 +659,11 @@
     function copyFullReport() {
       let fullText = document.getElementById('edit-header').value + '\n\n';
 
-      if (!document.getElementById('block-measures').classList.contains('hidden')) {
-        fullText += '📐 MEDIDAS E MATERIAS:\n' + document.getElementById('edit-measures').value + '\n\n';
+      if (!document.getElementById('block-features').classList.contains('hidden')) {
+        fullText += '🧠 CARACTERÍSTICAS E NECESIDADES:\n' + document.getElementById('edit-features').value + '\n\n';
       }
       if (!document.getElementById('block-strats').classList.contains('hidden')) {
-        fullText += '🛠️ ESTRATEXIAS E MATERIAIS:\n' + document.getElementById('edit-strats').value + '\n\n';
+        fullText += '🛠️ ESTRATEXIAS E EVOLUCIÓN DA EFICACIA:\n' + document.getElementById('edit-strats').value + '\n\n';
       }
       if (!document.getElementById('block-obs').classList.contains('hidden')) {
         fullText += '📝 SEGUIMENTO ESCRITO:\n' + document.getElementById('edit-obs').value + '\n\n';
