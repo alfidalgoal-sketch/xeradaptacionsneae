@@ -31,12 +31,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 </head>
 <body>
 
-<!-- ACCESO SEGURO SUPABASE -->
+<!-- ACCESO SEGURO MANDATORIO (AUTH GATE) -->
 <div id="auth-gate" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);">
   <div style="background:#fff;border-radius:24px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);text-align:center;">
     <div style="font-size:40px;margin-bottom:10px">🧩</div>
     <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:#1E3A5F;margin-bottom:4px">NEAE Adaptacións Pro</h2>
-    <p style="font-size:12px;color:#64748B;margin-bottom:20px">Acceso exclusivo coa túa conta do centro</p>
+    <p style="font-size:12px;color:#64748B;margin-bottom:20px">Acceso exclusivo para docentes e orientación</p>
     
     <form onsubmit="handleAuth(event)" style="text-align:left;display:flex;flex-direction:column;gap:12px">
       <div>
@@ -72,13 +72,13 @@ async function checkAuth() {
     if (session && session.user) {
       document.getElementById("auth-gate").style.display = "none";
       document.getElementById("app").style.display = "block";
-      r();
+      r(); // SÓ renderiza a app se a autenticación é válida
     } else {
       document.getElementById("auth-gate").style.display = "flex";
       document.getElementById("app").style.display = "none";
     }
   } catch (err) {
-    console.error("Auth check error:", err);
+    console.error("Erro na verificación da autenticación:", err);
   }
 }
 
@@ -114,10 +114,11 @@ async function handleAuth(e) {
 
 async function logout() {
   if (_supabase) await _supabase.auth.signOut();
-  checkAuth();
+  document.getElementById("auth-gate").style.display = "flex";
+  document.getElementById("app").style.display = "none";
 }
 
-// ── DATOS PROTOCOLOS ────────────────────────────────────────────────────────
+// ── DATOS PROTOCOLOS (100% GALEGO NORMATIVO) ────────────────────────────────
 const PERFILES=[
   {id:"TDAH",label:"TDAH",emoji:"⚡",color:"#F59E0B",bg:"#FEF3C7",desc:"Trastorno por Déficit de Atención e Hiperactividade"},
   {id:"TEA", label:"TEA", emoji:"🔵",color:"#3B82F6",bg:"#DBEAFE",desc:"Trastorno do Espectro Autista"},
@@ -127,38 +128,43 @@ const PERFILES=[
   {id:"DM",  label:"Discapacidade Motora",emoji:"♿",color:"#F97316",bg:"#FFEDD5",desc:"Limitacións motrices"},
   {id:"AC",  label:"Altas Capacidades",emoji:"🌟",color:"#6366F1",bg:"#E0E7FF",desc:"Enriquecemento e profundización"},
 ];
+
 const NECESIDADES={
   TDAH:["Dificultade para manter a atención","Impulsividade","Desorganización","Exceso de actividade motora","Dificultade para seguir instrucións longas","Esquecementos frecuentes","Baixa tolerancia á frustración"],
-  TEA: ["Dificultade en comunicación social","Necesidade de rutinas fixas","Sensibilidade sensorial","Dificultade con cambios inesperados","Procesamento literal da linguaxe","Intereses moi específicos","Dificultade co traballo en grupo"],
-  DEA: ["Dislexia (lectura)","Disgrafia (escritura)","Discalculia (matemáticas)","Velocidade de procesamento lenta","Memoria de traballo reducida","Dificultade con comprensión lectora","Confusión de letras/números"],
-  DI:  ["Dificultade en razoamento abstracto","Ritmo de aprendizaxe lento","Limitacións en comprensión lectora","Dificultade en xeneralización","Necesidade de aprendizaxe funcional","Vocabulario reducido","Dificultade en resolución de problemas"],
+  TEA: ["Dificultade na comunicación social","Necesidade de rutinas fixas","Sensibilidade sensorial","Dificultade con cambios inesperados","Procesamento literal da linguaxe","Intereses moi específicos","Dificultade co traballo en grupo"],
+  DEA: ["Dislexia (lectura)","Disgrafía (escritura)","Discalculia (matemáticas)","Velocidade de procesamento lenta","Memoria de traballo reducida","Dificultade con comprensión lectora","Confusión de letras/números"],
+  DI:  ["Dificultade no razoamento abstracto","Ritmo de aprendizaxe lento","Limitacións na comprensión lectora","Dificultade na xeneralización","Necesidade de aprendizaxe funcional","Vocabulario reducido","Dificultade na resolución de problemas"],
   DS:  ["Perda auditiva","Perda visual","Necesita apoios visuais alternativos","Necesita apoios auditivos alternativos","Fatiga sensorial","Baixa visión funcional","Hipoacusia moderada-severa"],
   DM:  ["Dificultade motriz fina","Dificultade motriz grosa","Necesita adaptacións de acceso","Fatiga física","Dependencia de axudas técnicas","Dificultade na escritura manual","Lentitude na execución de tarefas"],
   AC:  ["Aburrimento co ritmo ordinario","Necesidade de profundización","Alta motivación intrínseca","Pensamento diverxente","Necesidade de retos adicionais","Perfeccionismo","Dificultade con tarefas mecánicas repetitivas"],
 };
-const ETAPAS=["Educación Infantil","Educación Primaria","Educación Secundaria","Bacharelato","FP"];
+
+const ETAPAS=["Educación Infantil","Educación Primaria","Educación Secundaria","Bacharelato","Formación Profesional"];
 const CURSOS={
   "Educación Infantil":["1º Infantil","2º Infantil","3º Infantil"],
   "Educación Primaria":["1º","2º","3º","4º","5º","6º"],
   "Educación Secundaria":["1º ESO","2º ESO","3º ESO","4º ESO"],
-  "Bacharelato":["1º Bach","2º Bach"],
-  "FP":["Grao Medio","Grao Superior"],
+  "Bacharelato":["1º Bacharelato","2º Bacharelato"],
+  "Formación Profesional":["Grao Medio","Grao Superior"],
 };
+
 const MATERIAS={
   "Educación Infantil":["Comunicación e Representación da Realidade","Descubrimento de Si Mesmo e Autonomía Persoal","Descubrimento do Contorno","Lingua Galega","Lingua Castelá","Lingua Estranxeira (Inglés)","Relixión / Valores Cívicos"],
   "Educación Primaria":["Lingua Galega e Literatura","Lingua Castelá e Literatura","Lingua Estranxeira (Inglés)","Matemáticas","Coñecemento do Medio Natural, Social e Cultural","Educación Física","Educación Artística (Plástica e Música)","Relixión / Valores Cívicos e Éticos"],
   "Educación Secundaria":["Lingua Galega e Literatura","Lingua Castelá e Literatura","Lingua Estranxeira (Inglés)","Matemáticas","Bioloxía e Xeoloxía","Física e Química","Xeografía e Historia","Educación Física","Tecnoloxía e Dixitalización","Educación Plástica e Visual","Música","Filosofía"],
   "Bacharelato":["Lingua Galega e Literatura","Lingua Castelá e Literatura","Lingua Estranxeira (Inglés)","Matemáticas / Matemáticas Aplicadas","Historia de España","Historia da Filosofía","Física","Química","Bioloxía","Debuxo Técnico","Economía"],
-  "FP":["Módulos profesionais específicos","FOL","Empresa e Iniciativa Emprendedora","Inglés Técnico"],
+  "Formación Profesional":["Módulos profesionais específicos","Formación e Orientación Laboral","Empresa e Iniciativa Emprendedora","Inglés Técnico"],
 };
+
 const DOCS=[
   {id:"adaptacions",label:"Adaptacións curriculares",emoji:"📋",desc:"Acceso, metodoloxía e avaliación"},
   {id:"orientacions",label:"Orientacións por materia",emoji:"📚",desc:"Guía práctica para cada docente"},
-  {id:"lista_control",label:"Lista de control",emoji:"☑️",desc:"Checklist de seguimento do alumno"},
+  {id:"lista_control",label:"Lista de control",emoji:"☑️",desc:"Checklist de seguimento do alumno/a"},
   {id:"cotexo",label:"Lista de cotexo",emoji:"📊",desc:"Avaliación criterial Si/Non/En proceso"},
   {id:"rubrica",label:"Rúbrica adaptada",emoji:"🎯",desc:"Niveis de desempeño personalizados"},
   {id:"pautas_familia",label:"Pautas para a familia",emoji:"🏠",desc:"Orientacións para o fogar"},
 ];
+
 const FORTALEZAS={
   TDAH:["Creatividade","Enerxía e entusiasmo","Pensamento rápido","Habilidades visuais","Empatía"],
   TEA: ["Memoria excepcional","Atención ao detalle","Honestidade","Intereses profundos","Pensamento sistemático"],
@@ -245,8 +251,8 @@ function html(){
     </div>
     <div style="display:flex;gap:8px">
       ${pantalla!=="inicio"?`<button onclick="goInicio()" class="btn" style="background:rgba(255,255,255,.15);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">← Inicio</button>`:""}
-      <button onclick="goHistorial()" class="btn" style="background:rgba(255,255,255,.15);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">📋 ${S.historial.length}</button>
-      <button onclick="logout()" class="btn" style="background:rgba(255,255,255,.15);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">Pechar</button>
+      <button onclick="goHistorial()" class="btn" style="background:rgba(255,255,255,.15);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">📋 Historial (${S.historial.length})</button>
+      <button onclick="logout()" class="btn" style="background:rgba(255,255,255,.15);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">Pechar sesión</button>
     </div>
   </div>`;
 
@@ -256,7 +262,7 @@ function html(){
     body=`<div style="text-align:center;padding:60px 20px">
       <div style="font-size:50px;margin-bottom:16px" class="pulse">🧠</div>
       <h3 style="font-weight:800;color:#1E3A5F;font-size:20px;margin-bottom:8px">Xerando documentos...</h3>
-      <p style="color:#64748B;font-size:14px">A IA está creando ${S.docs.length} documento${S.docs.length>1?"s":""} personalizados en galego</p>
+      <p style="color:#64748B;font-size:14px">Creating ${S.docs.length} documento${S.docs.length>1?"s":""} personalizados en galego normativo</p>
       <div style="display:flex;justify-content:center;gap:6px;margin-top:18px">
         <div class="dot dot1"></div><div class="dot dot2"></div><div class="dot dot3"></div>
       </div>
@@ -324,7 +330,7 @@ function html(){
           </div>
           <div>
             <label style="font-weight:700;color:#374151;font-size:13px;display:block;margin-bottom:5px">⚠️ Principais dificultades na aula</label>
-            <textarea id="dificultades" oninput="setState('dificultades',this.value)" placeholder="Ex: Non remata as tarefas, distraese facilmente..." rows="2" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid #E2E8F0;font-size:13px;color:#374151;resize:vertical">${esc(S.dificultades)}</textarea>
+            <textarea id="dificultades" oninput="setState('dificultades',this.value)" placeholder="Ex: Non remata as tarefas, distráchase facilmente..." rows="2" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid #E2E8F0;font-size:13px;color:#374151;resize:vertical">${esc(S.dificultades)}</textarea>
           </div>
           <div>
             <label style="font-weight:700;color:#374151;font-size:13px;display:block;margin-bottom:5px">🤝 Apoios que xa recibe</label>
@@ -479,7 +485,7 @@ function nova(){
 }
 function goWizard(){S.pantalla="wizard";S.step=1;r();}
 
-// GENERADOR LOCAL DE ADAPTACIONES
+// GENERADOR LOCAL DE ADAPTACIONES (100% GALEGO)
 function xerar(){
   syncTextFields();
   S.loading=true; S.resultado=""; S.gardado=false; r();
@@ -523,7 +529,7 @@ function xerar(){
 
     if (S.docs.includes("lista_control")) {
       doc += `☑️ **LISTA DE CONTROL — SEGUIMENTO DO ALUMNO/A**\n\n`;
-      doc += `- □ Mantiene a atención nas explicacións iniciais (mínimo 10 min).\n`;
+      doc += `- □ Mantén a atención nas explicacións iniciais (mínimo 10 min).\n`;
       doc += `- □ Completa as tarefas adaptadas no tempo establecido.\n`;
       doc += `- □ Utiliza de forma autónoma os apoios visuais e o material adaptado.\n`;
       doc += `- □ Solicita axuda do docente de forma adecuada cando se bloquea.\n`;
@@ -541,7 +547,7 @@ function xerar(){
 
     if (S.docs.includes("pautas_familia")) {
       doc += `🏠 **PAUTAS PARA A FAMILIA**\n\n`;
-      doc += `1. Establecer unha rutina diaria na casa cun horario visual e predictible para os deberes.\n`;
+      doc += `1. Establecer unha rutina diaria na casa cun horario visual e predible para os deberes.\n`;
       doc += `2. Fragmentar o tempo de estudo en bloques curtos (15-20 min) con pequenos descansos.\n`;
       doc += `3. Valorar e felicitar o esforzo e o traballo diario, non só o resultado dos exames.\n`;
       doc += `4. Manter unha comunicación fluída e coordinada co equipo de orientación do centro.\n`;
