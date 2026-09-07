@@ -7,9 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Nunito','Segoe UI',sans-serif;background:#F8FAFC;min-height:100vh}
+body{font-family:'Nunito','Segoe UI',sans-serif;background:#F8FAFC;min-height:100vh;color:#1E293B}
 .hov{transition:all .2s;cursor:pointer}
-.hov:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.hov:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
 .btn{transition:all .18s;cursor:pointer;border:none;font-family:inherit}
 .btn:hover:not(:disabled){filter:brightness(1.07);transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -27,11 +27,12 @@ body{font-family:'Nunito','Segoe UI',sans-serif;background:#F8FAFC;min-height:10
 input,textarea,select{outline:none;font-family:inherit}
 input:focus,textarea:focus,select:focus{border-color:#2563EB!important;box-shadow:0 0 0 3px rgba(37,99,235,.1)!important}
 select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+@media print{.no-print{display:none!important}body{background:white}.print-box{border:none!important;max-height:none!important;padding:0!important}}
 </style>
 </head>
 <body>
 
-<!-- ACCESO SEGURO MANDATORIO (AUTH GATE) -->
+<!-- AUTH GATE (ACCESO SEGURO SUPABASE) -->
 <div id="auth-gate" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);">
   <div style="background:#fff;border-radius:24px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);text-align:center;">
     <div style="font-size:40px;margin-bottom:10px">🧩</div>
@@ -56,7 +57,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <div id="app" style="display:none"></div>
 
 <script>
-// ── CONFIGURACIÓN E AUTENTICACIÓN BLINDADA (SUPABASE) ──────────────────────
+// ── CONFIGURACIÓN SUPABASE ──────────────────────────────────────────────────
 const SUPABASE_URL = "https://gnzqvwmwvsfjjwvzqcjy.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA5MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
 
@@ -65,6 +66,7 @@ if (window.supabase) {
   _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
+// ── CONTROL DE SESIÓN E CARGA ───────────────────────────────────────────────
 async function checkAuth() {
   if (!_supabase) return;
   try {
@@ -72,6 +74,7 @@ async function checkAuth() {
     if (session && session.user) {
       document.getElementById("auth-gate").style.display = "none";
       document.getElementById("app").style.display = "block";
+      await cargarHistorialSupabase();
       r();
     } else {
       showLoginGate();
@@ -93,14 +96,8 @@ function showLoginGate() {
 
   if (emailInput) emailInput.value = "";
   if (passInput) passInput.value = "";
-  if (errBox) {
-    errBox.style.display = "none";
-    errBox.textContent = "";
-  }
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Acceder ao Panel";
-  }
+  if (errBox) { errBox.style.display = "none"; errBox.textContent = ""; }
+  if (btn) { btn.disabled = false; btn.textContent = "Acceder ao Panel"; }
 }
 
 async function handleAuth(e) {
@@ -212,7 +209,7 @@ const FORTALEZAS={
   AC:  ["Razoamento abstracto","Creatividade","Autonomía","Liderado","Pensamento crítico"],
 };
 
-// ── ESTADO ─────────────────────────────────────────────────────────────────
+// ── ESTADO APLICACIÓN ───────────────────────────────────────────────────────
 const S={
   pantalla:"inicio", step:1,
   perfil:null, necesidades:[], etapa:"Educación Primaria", curso:"3º",
@@ -220,7 +217,7 @@ const S={
   nome:"", idade:"", fortalezas:[], outrasFortalezas:"", dificultades:"", apoios:"", observacins:"",
   materias:[], docs:["adaptacions"],
   resultado:"", loading:false, gardado:false, copiado:false,
-  historial: (()=>{try{return JSON.parse(localStorage.getItem("neae_gl_v3")||"[]")}catch{return []}})(),
+  historial: [],
   hItem:null,
 };
 
@@ -278,7 +275,7 @@ function html(){
   const {pantalla,step,loading}=S;
   const p=pd(); const pC=p.color; const pB=p.bg;
 
-  const header=`<div style="background:linear-gradient(135deg,#1E3A5F,#2563EB);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+  const header=`<div class="no-print" style="background:linear-gradient(135deg,#1E3A5F,#2563EB);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
     <div style="display:flex;align-items:center;gap:10px">
       <span style="font-size:26px">🧩</span>
       <div>
@@ -312,7 +309,7 @@ function html(){
         <p style="color:#64748B;margin-top:8px;font-size:15px">Crea documentos educativos personalizados: adaptacións, listas de control, rúbricas e máis. Todo en galego para a Xunta.</p>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-        ${[["🧑‍🎓","Perfil detallado","Idade, fortalezas, apoios"],["📄","6 tipos de documentos","Adaptacións, listas, rúbricas"],["📚","Por materia","Orientacións específicas"],["🎯","Criterial","Listas listas para imprimir"],["✨","IA avanzada","Xera en segundos"],["💾","Historial","Garda as túas adaptacións"]].map(([e,t,d])=>`
+        ${[["🧑‍🎓","Perfil detallado","Idade, fortalezas, apoios"],["📄","6 tipos de documentos","Adaptacións, listas, rúbricas"],["📚","Por materia","Orientacións específicas"],["🎯","Criterial","Listas listas para imprimir"],["✨","IA avanzada","Xera en segundos"],["💾","Historial Nube","Sincronizado en Supabase"]].map(([e,t,d])=>`
           <div style="background:white;border-radius:12px;padding:14px 16px;border:1px solid #E2E8F0">
             <div style="font-size:24px;margin-bottom:4px">${e}</div>
             <div style="font-weight:800;color:#1E3A5F;font-size:13px">${t}</div>
@@ -433,42 +430,43 @@ function html(){
     body=`<div class="fade">${progressBar()}${inner}</div>`;
   } else if(pantalla==="resultado"){
     body=`<div class="fade">
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <div class="no-print" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
         ${chip(p.emoji+" "+p.label,pC,pB)}
         ${chip(S.curso+" · "+S.etapa)}
         ${chip(S.intensidade)}
         ${S.nome?chip("👤 "+S.nome,"#1E3A5F","#EFF6FF"):""}
       </div>
-      <div style="background:white;border-radius:14px;border:1px solid #E2E8F0;padding:18px 20px;margin-bottom:14px;max-height:480px;overflow-y:auto;line-height:1.75">
+      <div class="print-box" style="background:white;border-radius:14px;border:1px solid #E2E8F0;padding:18px 20px;margin-bottom:14px;max-height:480px;overflow-y:auto;line-height:1.75">
         ${renderMD(S.resultado,pC)}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="no-print" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
         <button onclick="copiar()" class="btn" style="background:${S.copiado?"#D1FAE5":"#F1F5F9"};color:${S.copiado?"#065F46":"#374151"};padding:11px;border-radius:12px;font-size:13px;font-weight:700">
           ${S.copiado?"✅ Copiado":"📋 Copiar"}
         </button>
-        <button onclick="gardar()" ${S.gardado?"disabled":""} class="btn" style="background:${S.gardado?"#D1FAE5":"#ECFDF5"};color:${S.gardado?"#065F46":"#059669"};padding:11px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid ${S.gardado?"#6EE7B7":"#A7F3D0"}">
+        <button onclick="gardar()" ${S.gardado?"disabled":""} id="btn-gardar" class="btn" style="background:${S.gardado?"#D1FAE5":"#ECFDF5"};color:${S.gardado?"#065F46":"#059669"};padding:11px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid ${S.gardado?"#6EE7B7":"#A7F3D0"}">
           ${S.gardado?"✅ Gardado":"💾 Gardar"}
         </button>
+        <button onclick="window.print()" class="btn" style="background:#EFF6FF;color:#2563EB;padding:11px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid #BFDBFE">🖨️ PDF</button>
         <button onclick="nova()" class="btn" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;padding:11px;border-radius:12px;font-size:13px;font-weight:800">✨ Nova</button>
       </div>
-      <button onclick="setStep(4);S.pantalla='wizard';r()" class="btn" style="width:100%;background:#F8FAFC;color:#475569;padding:10px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid #E2E8F0">← Cambiar parámetros e rexenerar</button>
+      <button onclick="setStep(4);S.pantalla='wizard';r()" class="btn no-print" style="width:100%;background:#F8FAFC;color:#475569;padding:10px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid #E2E8F0">← Cambiar parámetros e rexenerar</button>
     </div>`;
   } else if(pantalla==="historial"){
     body=`<div class="fade">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
         <div>
-          <h2 style="font-size:20px;font-weight:900;color:#1E3A5F">📋 Historial</h2>
-          <p style="color:#64748B;font-size:13px">${S.historial.length} adaptacións gardadas</p>
+          <h2 style="font-size:20px;font-weight:900;color:#1E3A5F">📋 Historial de Adaptacións</h2>
+          <p style="color:#64748B;font-size:13px">${S.historial.length} adaptacións rexistradas na nube</p>
         </div>
         <button onclick="nova()" class="btn" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700">+ Nova</button>
       </div>
       ${S.historial.length===0?`<div style="text-align:center;padding:48px 20px;background:white;border-radius:14px;border:1px solid #E2E8F0">
         <div style="font-size:44px;margin-bottom:10px">📭</div>
-        <div style="font-weight:700;color:#94A3B8">Aínda non hai adaptacións gardadas</div>
+        <div style="font-weight:700;color:#94A3B8">Aínda non hai adaptacións gardadas na base de datos</div>
       </div>`:S.historial.map(h=>{
         const hp=PERFILES.find(p=>p.id===h.perfil)||{};
         const open=S.hItem===h.id;
-        return`<div onclick="togHItem(${h.id})" class="hov" style="background:white;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden;margin-bottom:10px">
+        return`<div onclick="togHItem('${h.id}')" class="hov" style="background:white;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden;margin-bottom:10px">
           <div style="padding:13px 16px;display:flex;align-items:center;gap:12px">
             <div style="width:40px;height:40px;border-radius:10px;background:${hp.bg||"#F1F5F9"};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${hp.emoji||"📄"}</div>
             <div style="flex:1">
@@ -476,7 +474,7 @@ function html(){
               <div style="color:#94A3B8;font-size:11px;margin-top:2px">${esc(h.curso)} · ${esc(h.etapa)} · ${esc(h.data)}</div>
             </div>
             <div style="color:#CBD5E1">${open?"▲":"▼"}</div>
-            <button onclick="borrar(${h.id},event)" class="btn" style="background:#FEF2F2;color:#EF4444;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;border:1.5px solid #FECACA;margin-left:4px">🗑️</button>
+            <button onclick="borrarSupabase('${h.id}',event)" class="btn" style="background:#FEF2F2;color:#EF4444;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;border:1.5px solid #FECACA;margin-left:4px">🗑️</button>
           </div>
           ${open?`<div style="border-top:1px solid #F1F5F9;padding:14px 16px;background:#FAFAFA">
             <div style="font-size:13px;line-height:1.7;max-height:280px;overflow-y:auto">${renderMD(h.resultado,hp.color)}</div>
@@ -522,7 +520,7 @@ function nova(){
 }
 function goWizard(){S.pantalla="wizard";S.step=1;r();}
 
-// GENERADOR LOCAL DE ADAPTACIONES (100% GALEGO)
+// GENERADOR LOCAL DE ADAPTACIONES
 function xerar(){
   syncTextFields();
   S.loading=true; S.resultado=""; S.gardado=false; r();
@@ -570,7 +568,7 @@ function xerar(){
       doc += `- □ Completa as tarefas adaptadas no tempo establecido.\n`;
       doc += `- □ Utiliza de forma autónoma os apoios visuais e o material adaptado.\n`;
       doc += `- □ Solicita axuda do docente de forma adecuada cando se bloquea.\n`;
-      doc += `- □ Acepta as transicións entre actividades e rutinas sen frustración.\n\n`;
+      doc += `- □ Acepta as transitiones entre actividades e rutinas sen frustración.\n\n`;
       doc += `---\n\n`;
     }
 
@@ -594,14 +592,84 @@ function xerar(){
     S.loading = false;
     S.pantalla = "resultado";
     r();
-  }, 1200);
+  }, 1000);
 }
 
-function gardar(){
-  const e={id:Date.now(),data:new Date().toLocaleDateString("gl-ES"),alumno:S.nome||"Sen nome",perfil:S.perfil,necesidades:S.necesidades,etapa:S.etapa,curso:S.curso,intensidade:S.intensidade,materias:S.materias,docs:S.docs,resultado:S.resultado};
-  S.historial=[e,...S.historial];
-  try{localStorage.setItem("neae_gl_v3",JSON.stringify(S.historial));}catch{}
-  S.gardado=true; r();
+// ── PERSISTENCIA EN SUPABASE ────────────────────────────────────────────────
+async function cargarHistorialSupabase() {
+  if (!_supabase) return;
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) return;
+
+    const { data, error } = await _supabase
+      .from('adaptacions')
+      .select('*')
+      .eq('creado_por', session.user.id)
+      .order('creado_en', { ascending: false });
+
+    if (!error && data) {
+      S.historial = data.map(item => ({
+        id: item.id,
+        data: new Date(item.creado_en).toLocaleDateString("gl-ES"),
+        alumno: item.alumno_nome || "Sen nome",
+        perfil: item.perfil,
+        etapa: item.etapa,
+        curso: item.curso,
+        resultado: item.resultado
+      }));
+    }
+  } catch (err) {
+    console.error("Erro ao cargar o historial de Supabase:", err);
+  }
+}
+
+async function gardar() {
+  if (!_supabase) return;
+  const btn = document.getElementById("btn-gardar");
+  if (btn) { btn.disabled = true; btn.textContent = "Gardando..."; }
+
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) throw new Error("Sesión non válida");
+
+    const rexistro = {
+      creado_por: session.user.id,
+      alumno_nome: S.nome || "Sen nome",
+      perfil: S.perfil,
+      etapa: S.etapa,
+      curso: S.curso,
+      resultado: S.resultado,
+      datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
+    };
+
+    const { error } = await _supabase.from('adaptacions').insert([rexistro]);
+
+    if (error) throw error;
+
+    S.gardado = true;
+    await cargarHistorialSupabase();
+    r();
+  } catch (err) {
+    console.error("Erro ao gardar en Supabase:", err);
+    alert("⛔ Non se puido gardar na base de datos. Revisa a túa conexión.");
+    if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
+  }
+}
+
+async function borrarSupabase(id, ev) {
+  ev.stopPropagation();
+  if (!_supabase || !confirm("Estás segura de que queres eliminar esta adaptación?")) return;
+
+  try {
+    const { error } = await _supabase.from('adaptacions').delete().eq('id', id);
+    if (!error) {
+      await cargarHistorialSupabase();
+      r();
+    }
+  } catch (err) {
+    console.error("Erro ao eliminar de Supabase:", err);
+  }
 }
 
 async function copiar(){
@@ -617,14 +685,6 @@ async function copiarTexto(btnId,ev){
   try{await navigator.clipboard.writeText(text);}
   catch{const el=document.createElement("textarea");el.value=text;el.style.cssText="position:fixed;opacity:0";document.body.appendChild(el);el.select();document.execCommand("copy");document.body.removeChild(el);}
   if(btn){btn.textContent="✅ Copiado";setTimeout(()=>{btn.textContent="📋 Copiar";},2000);}
-}
-
-function borrar(id,ev){
-  ev.stopPropagation();
-  S.historial=S.historial.filter(h=>h.id!==id);
-  if(S.hItem===id)S.hItem=null;
-  try{localStorage.setItem("neae_gl_v3",JSON.stringify(S.historial));}catch{}
-  r();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
