@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Nunito','Segoe UI',sans-serif;background:#F8FAFC;min-height:100vh;color:#1E293B}
+body{font-family:'Nunito','Segoe UI',sans-serif;background:#F8FAFC;min-height:100vh;color:#1E293B;display:flex;flex-direction:column}
 .hov{transition:all .2s;cursor:pointer}
 .hov:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
 .btn{transition:all .18s;cursor:pointer;border:none;font-family:inherit}
@@ -28,6 +28,7 @@ input,textarea,select{outline:none;font-family:inherit}
 input:focus,textarea:focus,select:focus{border-color:#2563EB!important;box-shadow:0 0 0 3px rgba(37,99,235,.1)!important}
 select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 @media print{.no-print{display:none!important}body{background:white}.print-box{border:none!important;max-height:none!important;padding:0!important}}
+footer{margin-top:auto;padding:16px;text-align:center;font-size:12px;color:#64748B;border-top:1px solid #E2E8F0;background:#FFFFFF}
 </style>
 </head>
 <body>
@@ -54,12 +55,16 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   </div>
 </div>
 
-<div id="app" style="display:none"></div>
+<div id="app" style="display:none;flex:1"></div>
+
+<footer class="no-print">
+  NEAE Adaptacións Pro &copy; 2026 <strong>AlexLago</strong> · Orientación Educativa
+</footer>
 
 <script>
 // ── CONFIGURACIÓN SUPABASE (CONTROLAULA) ────────────────────────────────────
 const SUPABASE_URL = "https://gnzqvwmwvsfjjwvzqcjy.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA5MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA9MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
 
 let _supabase;
 if (window.supabase) {
@@ -116,7 +121,6 @@ async function handleAuth(e) {
   btn.disabled = true;
   btn.textContent = "Verificando...";
 
-  // Limpeza de tokens antigos
   for (let key in localStorage) {
     if (key.startsWith("sb-")) localStorage.removeItem(key);
   }
@@ -652,10 +656,9 @@ async function gardar() {
       datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
     };
 
-    const { data, error } = await _supabase
+    const { error } = await _supabase
       .from('neae_adaptacions')
-      .insert([rexistro])
-      .select();
+      .insert([rexistro]);
 
     if (error) {
       console.error("Detalle do erro de Supabase:", error);
@@ -667,7 +670,7 @@ async function gardar() {
     r();
   } catch (err) {
     console.error("Erro ao gardar en Supabase:", err);
-    alert("⛔ Non se puido gardar na base de datos: " + (err.message || err.details || "Erro de permisos"));
+    alert("⛔ Non se puido gardar na base de datos. Revisa os permisos.");
     if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
   }
 }
