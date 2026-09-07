@@ -670,7 +670,46 @@ async function borrarSupabase(id, ev) {
     console.error("Erro ao eliminar de Supabase:", err);
   }
 }
+async function gardar() {
+  if (!_supabase) return;
+  const btn = document.getElementById("btn-gardar");
+  if (btn) { btn.disabled = true; btn.textContent = "Gardando..."; }
 
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session || !session.user) {
+      alert("⛔ A túa sesión caducou. Por favor, volve acceder.");
+      showLoginGate();
+      return;
+    }
+
+    const rexistro = {
+      creado_por: session.user.id,
+      alumno_nome: S.nome ? S.nome.trim() : "Sen nome",
+      perfil: S.perfil,
+      etapa: S.etapa,
+      curso: S.curso,
+      resultado: S.resultado,
+      datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
+    };
+
+    const { error } = await _supabase
+      .from('neae_adaptacions')
+      .insert([rexistro]);
+
+    if (error) {
+      console.error("Detalle do erro de Supabase:", error);
+      throw error;
+    }
+
+    S.gardado = true;
+    await cargarHistorialSupabase();
+    r();
+  } catch (err) {
+    console.error("Erro ao gardar en Supabase:", err);
+    alert("⛔ Non se puido gardar na base de datos (" + (err.message || "Erro 409") + "). Revisa os permisos.");
+    if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
+}
 async function copiar(){
   try{await navigator.clipboard.writeText(S.resultado);}
   catch{const el=document.createElement("textarea");el.value=S.resultado;el.style.cssText="position:fixed;opacity:0";document.body.appendChild(el);el.select();document.execCommand("copy");document.body.removeChild(el);}
