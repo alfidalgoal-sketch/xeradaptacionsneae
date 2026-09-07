@@ -32,12 +32,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 </head>
 <body>
 
-<!-- AUTH GATE (ACCESO SEGURO SUPABASE) -->
+<!-- AUTH GATE (ACCESO SEGURO SUPABASE - CONTROLAULA) -->
 <div id="auth-gate" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);">
   <div style="background:#fff;border-radius:24px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);text-align:center;">
     <div style="font-size:40px;margin-bottom:10px">🧩</div>
     <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:#1E3A5F;margin-bottom:4px">NEAE Adaptacións Pro</h2>
-    <p style="font-size:12px;color:#64748B;margin-bottom:20px">Acceso exclusivo para docentes e orientación</p>
+    <p style="font-size:12px;color:#64748B;margin-bottom:20px">Acceso exclusivo coa conta de ControlAula</p>
     
     <form onsubmit="handleAuth(event)" style="text-align:left;display:flex;flex-direction:column;gap:12px">
       <div>
@@ -57,7 +57,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <div id="app" style="display:none"></div>
 
 <script>
-// ── CONFIGURACIÓN SUPABASE ──────────────────────────────────────────────────
+// ── CONFIGURACIÓN SUPABASE (CONTROLAULA) ────────────────────────────────────
 const SUPABASE_URL = "https://gnzqvwmwvsfjjwvzqcjy.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA5MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
 
@@ -568,7 +568,7 @@ function xerar(){
       doc += `- □ Completa as tarefas adaptadas no tempo establecido.\n`;
       doc += `- □ Utiliza de forma autónoma os apoios visuais e o material adaptado.\n`;
       doc += `- □ Solicita axuda do docente de forma adecuada cando se bloquea.\n`;
-      doc += `- □ Acepta as transitiones entre actividades e rutinas sen frustración.\n\n`;
+      doc += `- □ Acepta as transicións entre actividades e rutinas sen frustración.\n\n`;
       doc += `---\n\n`;
     }
 
@@ -595,7 +595,7 @@ function xerar(){
   }, 1000);
 }
 
-// ── PERSISTENCIA EN SUPABASE ────────────────────────────────────────────────
+// ── PERSISTENCIA EN SUPABASE (TÁBOA NEAE_ADAPTACIONS EN CONTROLAULA) ─────────
 async function cargarHistorialSupabase() {
   if (!_supabase) return;
   try {
@@ -603,9 +603,8 @@ async function cargarHistorialSupabase() {
     if (!session) return;
 
     const { data, error } = await _supabase
-      .from('adaptacions')
+      .from('neae_adaptacions')
       .select('*')
-      .eq('creado_por', session.user.id)
       .order('creado_en', { ascending: false });
 
     if (!error && data) {
@@ -643,7 +642,7 @@ async function gardar() {
       datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
     };
 
-    const { error } = await _supabase.from('adaptacions').insert([rexistro]);
+    const { error } = await _supabase.from('neae_adaptacions').insert([rexistro]);
 
     if (error) throw error;
 
@@ -662,7 +661,7 @@ async function borrarSupabase(id, ev) {
   if (!_supabase || !confirm("Estás segura de que queres eliminar esta adaptación?")) return;
 
   try {
-    const { error } = await _supabase.from('adaptacions').delete().eq('id', id);
+    const { error } = await _supabase.from('neae_adaptacions').delete().eq('id', id);
     if (!error) {
       await cargarHistorialSupabase();
       r();
