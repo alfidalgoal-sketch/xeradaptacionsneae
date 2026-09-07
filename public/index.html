@@ -652,9 +652,10 @@ async function gardar() {
       datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
     };
 
-    const { error } = await _supabase
+    const { data, error } = await _supabase
       .from('neae_adaptacions')
-      .insert([rexistro]);
+      .insert([rexistro])
+      .select();
 
     if (error) {
       console.error("Detalle do erro de Supabase:", error);
@@ -666,7 +667,7 @@ async function gardar() {
     r();
   } catch (err) {
     console.error("Erro ao gardar en Supabase:", err);
-    alert("⛔ Non se puido gardar na base de datos. Revisa os permisos.");
+    alert("⛔ Non se puido gardar na base de datos: " + (err.message || err.details || "Erro de permisos"));
     if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
   }
 }
