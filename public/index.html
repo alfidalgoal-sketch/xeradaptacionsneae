@@ -32,7 +32,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 </head>
 <body>
 
-<!-- AUTH GATE (ACCESO SEGURO SUPABASE - CONTROLAULA) -->
+<!-- ACCESO SEGURO SUPABASE (CONTROLAULA) -->
 <div id="auth-gate" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);">
   <div style="background:#fff;border-radius:24px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);text-align:center;">
     <div style="font-size:40px;margin-bottom:10px">🧩</div>
@@ -66,7 +66,7 @@ if (window.supabase) {
   _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// ── CONTROL DE SESIÓN E CARGA ───────────────────────────────────────────────
+// ── CONTROL DE SESIÓN ───────────────────────────────────────────────────────
 async function checkAuth() {
   if (!_supabase) return;
   try {
@@ -116,9 +116,15 @@ async function handleAuth(e) {
   btn.disabled = true;
   btn.textContent = "Verificando...";
 
+  // Limpeza de tokens antigos
+  for (let key in localStorage) {
+    if (key.startsWith("sb-")) localStorage.removeItem(key);
+  }
+
   try {
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      console.error("Erro Auth:", error.message);
       errBox.textContent = "⛔ Acceso denegado: Correo ou contrasinal incorrectos.";
       errBox.style.display = "block";
       btn.disabled = false;
@@ -144,7 +150,7 @@ async function logout() {
       ]);
     }
   } catch (err) {
-    console.warn("Peche de sesión completado localmente:", err.message);
+    console.warn("Peche local completado:", err.message);
   } finally {
     for (let key in localStorage) {
       if (key.startsWith("sb-")) localStorage.removeItem(key);
@@ -152,7 +158,7 @@ async function logout() {
   }
 }
 
-// ── DATOS PROTOCOLOS (100% GALEGO NORMATIVO) ────────────────────────────────
+// ── DATOS PROTOCOLOS GALEGO ─────────────────────────────────────────────────
 const PERFILES=[
   {id:"TDAH",label:"TDAH",emoji:"⚡",color:"#F59E0B",bg:"#FEF3C7",desc:"Trastorno por Déficit de Atención e Hiperactividade"},
   {id:"TEA", label:"TEA", emoji:"🔵",color:"#3B82F6",bg:"#DBEAFE",desc:"Trastorno do Espectro Autista"},
@@ -595,7 +601,7 @@ function xerar(){
   }, 1000);
 }
 
-// ── PERSISTENCIA EN SUPABASE (TÁBOA NEAE_ADAPTACIONS EN CONTROLAULA) ─────────
+// ── PERSISTENCIA EN SUPABASE ────────────────────────────────────────────────
 async function cargarHistorialSupabase() {
   if (!_supabase) return;
   try {
@@ -623,53 +629,6 @@ async function cargarHistorialSupabase() {
   }
 }
 
-async function gardar() {
-  if (!_supabase) return;
-  const btn = document.getElementById("btn-gardar");
-  if (btn) { btn.disabled = true; btn.textContent = "Gardando..."; }
-
-  try {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (!session) throw new Error("Sesión non válida");
-
-    const rexistro = {
-      creado_por: session.user.id,
-      alumno_nome: S.nome || "Sen nome",
-      perfil: S.perfil,
-      etapa: S.etapa,
-      curso: S.curso,
-      resultado: S.resultado,
-      datos_json: { necesidades: S.necesidades, materias: S.materias, docs: S.docs }
-    };
-
-    const { error } = await _supabase.from('neae_adaptacions').insert([rexistro]);
-
-    if (error) throw error;
-
-    S.gardado = true;
-    await cargarHistorialSupabase();
-    r();
-  } catch (err) {
-    console.error("Erro ao gardar en Supabase:", err);
-    alert("⛔ Non se puido gardar na base de datos. Revisa a túa conexión.");
-    if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
-  }
-}
-
-async function borrarSupabase(id, ev) {
-  ev.stopPropagation();
-  if (!_supabase || !confirm("Estás segura de que queres eliminar esta adaptación?")) return;
-
-  try {
-    const { error } = await _supabase.from('neae_adaptacions').delete().eq('id', id);
-    if (!error) {
-      await cargarHistorialSupabase();
-      r();
-    }
-  } catch (err) {
-    console.error("Erro ao eliminar de Supabase:", err);
-  }
-}
 async function gardar() {
   if (!_supabase) return;
   const btn = document.getElementById("btn-gardar");
@@ -707,9 +666,26 @@ async function gardar() {
     r();
   } catch (err) {
     console.error("Erro ao gardar en Supabase:", err);
-    alert("⛔ Non se puido gardar na base de datos (" + (err.message || "Erro 409") + "). Revisa os permisos.");
+    alert("⛔ Non se puido gardar na base de datos. Revisa os permisos.");
     if (btn) { btn.disabled = false; btn.textContent = "💾 Gardar"; }
+  }
 }
+
+async function borrarSupabase(id, ev) {
+  ev.stopPropagation();
+  if (!_supabase || !confirm("Estás segura de que queres eliminar esta adaptación?")) return;
+
+  try {
+    const { error } = await _supabase.from('neae_adaptacions').delete().eq('id', id);
+    if (!error) {
+      await cargarHistorialSupabase();
+      r();
+    }
+  } catch (err) {
+    console.error("Erro ao eliminar de Supabase:", err);
+  }
+}
+
 async function copiar(){
   try{await navigator.clipboard.writeText(S.resultado);}
   catch{const el=document.createElement("textarea");el.value=S.resultado;el.style.cssText="position:fixed;opacity:0";document.body.appendChild(el);el.select();document.execCommand("copy");document.body.removeChild(el);}
