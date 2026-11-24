@@ -277,7 +277,13 @@ async function doLogin(e){
   V.busy = true; V.err=''; render();
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   V.busy = false;
-  if (error){ V.err = 'Correo ou contrasinal incorrectos.'; render(); return; }
+  if (error){
+    const m = error.message||'';
+    V.err = /invalid login|credentials/i.test(m) ? 'Correo ou contrasinal incorrectos. (Usa o mesmo correo e contrasinal da web de adaptacións NEAE.)'
+          : /api key|apikey|jwt|signature/i.test(m) ? 'Erro de configuración: a clave de Supabase non é válida. ('+m+')'
+          : /email not confirmed/i.test(m) ? 'O correo aínda non está confirmado en Supabase.'
+          : 'Non se puido entrar: '+m;
+    render(); return; }
   V.user = data.user; loadPanel();
 }
 async function logout(){ try { await sb.auth.signOut(); } catch(e){} V.user=null; go('landing'); }
