@@ -305,7 +305,7 @@ function viewPanel(){
     <div class="row" style="justify-content:space-between;margin-bottom:14px">
       <h2 style="margin:0">Os meus grupos</h2>
       <div class="row"><label class="btn sec" style="margin:0">⬆ Importar ficheiro<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this,null)"></label>
-      <button class="btn" onclick="openEdit(null)">＋ Novo grupo</button></div>
+      <button class="btn" onclick="openEdit(null)">+ Novo grupo</button></div>
     </div>
     ${V.grupos.length ? V.grupos.map(g=>{
       const n = g.sg_alumnos?.[0]?.count||0, r = g.sg_respostas?.[0]?.count||0;
@@ -313,7 +313,7 @@ function viewPanel(){
         <div class="hint">${esc(MODELS[g.modelo].nome)} · código <span class="code">${g.codigo}</span></div></div>
         <div class="row">${g.activo?'<span class="pill ok">Aberto</span>':'<span class="pill warn">Pechado</span>'}
         <span class="pill info">${r}/${n} respostas</span></div></div>`; }).join('')
-    : `<div class="card"><p>Aínda non tes grupos. Preme <b>＋ Novo grupo</b> para crear o primeiro.</p></div>`}
+    : `<div class="card"><p>Aínda non tes grupos. Preme <b>+ Novo grupo</b> para crear o primeiro.</p></div>`}
   </div>`;
 }
 
