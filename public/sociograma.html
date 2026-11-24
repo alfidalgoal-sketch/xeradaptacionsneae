@@ -225,7 +225,7 @@ function viewSetup(){
       <h2>Configurar o grupo</h2>
       <p class="muted">Os datos quedan gardados <b>só neste dispositivo</b>. Non se envían a ningún servidor.</p>
       <label>Nome do grupo</label>
-      <input id="f-grupo" value="${esc(c.grupo)}" placeholder="Ex.: 4º EP A — curso 2026/27">
+      <input id="f-grupo" name="sg-grupo" autocomplete="off" value="${esc(c.grupo)}" placeholder="Ex.: 4º EP A — curso 2026/27">
       <label>Cuestionario</label>
       <select id="f-modelo" ${hasResp?'disabled':''}>
         ${Object.entries(MODELS).map(([k,m])=>`<option value="${k}" ${c.modelo===k?'selected':''}>${esc(m.nome)}</option>`).join('')}
@@ -235,7 +235,7 @@ function viewSetup(){
       <textarea id="f-alumnos" rows="12" placeholder="Ana Pérez López&#10;Brais Castro Vila&#10;...">${esc(c.alumnos.map(a=>a.nome).join('\n'))}</textarea>
       <div class="hint">Se xa hai respostas, mantéñense as dos nomes que non cambies.</div>
       <label>PIN do profesorado (para ver resultados e saír do modo alumnado)</label>
-      <input id="f-pin" type="password" inputmode="numeric" value="${esc(c.pin)}" placeholder="Mínimo 4 díxitos">
+      <input id="f-pin" name="sg-pin" type="password" autocomplete="new-password" inputmode="numeric" value="${esc(c.pin)}" placeholder="Mínimo 4 díxitos">
       <div class="row" style="margin-top:18px"><button class="btn" onclick="saveSetup()">Gardar</button></div>
     </div>
     ${!S.config ? `<div class="card"><h3>Xa tes datos doutro dispositivo?</h3>
@@ -296,7 +296,7 @@ function needPin(fn){
   if (V.unlocked) return fn();
   window._pinCb = fn;
   V.modal = `<div class="modal no-print"><div class="card"><h3>PIN do profesorado</h3>
-    <input id="pin-in" type="password" inputmode="numeric" autofocus onkeydown="if(event.key==='Enter')checkPin()">
+    <input id="pin-in" name="sg-pin-check" type="password" autocomplete="off" inputmode="numeric" autofocus onkeydown="if(event.key==='Enter')checkPin()">
     <div class="row" style="margin-top:12px"><button class="btn" onclick="checkPin()">Entrar</button><button class="btn sec" onclick="V.modal=null;render()">Cancelar</button></div></div></div>`;
   render(); setTimeout(()=>{const i=document.getElementById('pin-in'); if(i) i.focus();},50);
 }
