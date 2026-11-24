@@ -218,7 +218,7 @@ function render(){
   app.innerHTML = views[V.view]();
   if (V.view==='results' && V.tab==='grafo') drawGraph();
 }
-function go(view){ V.view = view; V.err=''; window.scrollTo(0,0); render(); }
+function go(view){ V.view = view; V.err=''; V.warn=null; window.scrollTo(0,0); render(); }
 function topbar(title, sub, right=''){
   return `<div class="top no-print"><div><h1>${title}</h1><small>${esc(sub)}</small></div><div class="row">${right}</div></div>`;
 }
@@ -508,7 +508,7 @@ function steps(){
   return s;
 }
 function exitKid(){
-  if (!confirm('Saír sen enviar? Perderanse as respostas.')) return;
+  if (V.warn!=='exit'){ V.warn='exit'; return keepScroll(); }
   if (CTX.modo==='titor') go('kidpick'); else { V.err=''; go('landing'); }
 }
 function viewKid(){
@@ -530,11 +530,12 @@ function viewKid(){
     const opp = m.nominacions.find(o=>o.ambito===q.ambito && o.tipo!==q.tipo);
     const blocked = new Set(opp ? d.nom[opp.k] : []);
     body = `<div class="q">${esc(q.txt)}</div>
-      <p class="qsub">Escolle ata 3 (${sel.length}/3)</p>
+      <p class="qsub">Escolle ata 3 (${sel.length}/3). Se non queres escoller a ninguén, toca <b>Seguinte</b>.</p>
       <div class="grid">${others.map(a=>{ const i = sel.indexOf(a.id);
         return `<button class="name ${i>=0?'sel':''}" data-n="${i+1}" ${blocked.has(a.id)?'disabled title="Xa o/a escolliches na outra pregunta"':''} onclick="toggleNom('${q.k}','${a.id}')">${esc(a.nome)}</button>`; }).join('')}</div>
       ${sel.length ? `<label style="font-size:17px;margin-top:20px">${esc(q.por)}</label>
       <textarea rows="3" style="font-size:17px" autocomplete="off" placeholder="Escribe aquí (se queres)" oninput="V.draft.por['${q.k}']=this.value">${esc(d.por[q.k])}</textarea>` : ''}`;
+    if (!sel.length) nextTxt = 'Seguinte sen escoller ➜';
   }
   else if (cur.t==='atr'){
     const a = cur.a, v = d.atr[a.k];
@@ -552,13 +553,14 @@ function viewKid(){
       <div class="card" style="padding:8px 14px">${others.map(o=>`<div class="rk"><div class="nm">${esc(o.nome)}</div><div class="faces">
         ${m.escala.map(e=>`<button class="face ${d.rank[o.id]===e.v?'on':''}" onclick="setRank('${o.id}',${e.v})"><span>${e.e}</span>${e.t}</button>`).join('')}
       </div></div>`).join('')}</div>
+      ${V.warn==='rank'?`<div class="alert warn">Faltan ${others.length-done} compañeiros/as por valorar. Podes valoralos ou tocar <b>Enviar igualmente</b>.</div>`:''}
       ${V.err?`<div class="err">${esc(V.err)}</div>`:''}`;
-    nextTxt = V.busy ? 'Enviando...' : 'Enviar ✔';
+    nextTxt = V.busy ? 'Enviando...' : V.warn==='rank' ? 'Enviar igualmente ✔' : 'Enviar ✔';
     canNext = !V.busy;
   }
 
   return `<div class="top no-print"><div><h1>${esc(nm(V.kid))}</h1><small>${esc(S.config.grupo)}</small></div>
-    <button class="btn ghost" onclick="exitKid()">✕ Saír</button></div>
+    <button class="btn ghost" ${V.warn==='exit'?'style="background:#B91C1C;border-color:#B91C1C"':''} onclick="exitKid()">${V.warn==='exit'?'Saír sen enviar? Toca outra vez':'✕ Saír'}</button></div>
   <div class="kid"><div class="prog"><div style="width:${pct}%"></div></div>${body}
     <div class="nav">
       <button class="btn sec" ${V.step===0?'style="visibility:hidden"':''} onclick="V.step--;go('kid')">⬅ Atrás</button>
@@ -569,21 +571,19 @@ function keepScroll(){ const y = window.scrollY; render(); window.scrollTo(0,y);
 function toggleNom(k,id){
   const a = V.draft.nom[k], i = a.indexOf(id);
   if (i>=0) a.splice(i,1); else if (a.length<3) a.push(id);
-  keepScroll();
+  V.warn=null; keepScroll();
 }
 function pickAtr(k,id){
   V.draft.atr[k] = id; render();
   const at = V.step;
   setTimeout(()=>{ if (V.view==='kid' && V.step===at) nextStep(); }, 280);
 }
-function setRank(id,v){ V.draft.rank[id] = v; keepScroll(); }
+function setRank(id,v){ V.draft.rank[id] = v; if (V.warn==='exit') V.warn=null; keepScroll(); }
 function nextStep(){
   const st = steps(), cur = st[V.step];
-  if (cur.t==='nom' && V.draft.nom[cur.q.k].length===0 &&
-      !confirm('Non escolliches a ninguén. Queres seguir igualmente?')) return;
   if (cur.t==='rank'){
     const others = al().filter(a=>a.id!==V.kid), falta = others.filter(o=>!V.draft.rank[o.id]).length;
-    if (falta && !confirm(`Faltan ${falta} compañeiros/as por valorar. Enviar igualmente?`)) return;
+    if (falta && V.warn!=='rank'){ V.warn='rank'; return keepScroll(); }
     return enviar();
   }
   V.step++; go('kid');
