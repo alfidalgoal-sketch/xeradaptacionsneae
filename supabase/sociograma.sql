@@ -1,10 +1,3 @@
--- =====================================================================
--- SOCIOGRAMA DE AULA — táboas e funcións para Supabase
--- Pégase enteiro en Supabase → SQL Editor → New query → Run.
--- Pódese executar máis dunha vez sen problema.
--- Non modifica ningunha táboa existente: só crea as que comezan por sg_
--- =====================================================================
-
 create extension if not exists pgcrypto;
 
 -- ---------- Táboas ----------
@@ -122,3 +115,5 @@ revoke all on function public.sg_enviar(text,uuid,text,jsonb)    from public;
 grant execute on function public.sg_info(text,text)              to anon, authenticated;
 grant execute on function public.sg_codigos(text)                to anon, authenticated;
 grant execute on function public.sg_enviar(text,uuid,text,jsonb) to anon, authenticated;
+
+-- SOCIOGRAMA DE AULA: fin. Se ves "Success", xa está.
