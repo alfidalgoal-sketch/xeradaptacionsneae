@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sociograma de aula</title>
+<style>
+:root{
+  --bg:#F8FAFC;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--line:#E2E8F0;
+  --brand:#2563EB;--brand-dark:#1E3A5F;--ok:#15803D;--ok-bg:#DCFCE7;--bad:#B91C1C;--bad-bg:#FEE2E2;
+  --warn:#B45309;--warn-bg:#FEF3C7;--info-bg:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none}
+input,textarea,select{font-family:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:#fff;color:var(--ink)}
+textarea{resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+.top{background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{font-size:19px;font-weight:900}
+.top small{opacity:.85;font-size:12px;display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+.btn{padding:11px 18px;border-radius:12px;font-weight:800;font-size:15px;background:var(--brand);color:#fff;transition:filter .15s,transform .15s}
+.btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+.btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6);padding:8px 14px;font-size:13px}
+.btn.danger{background:var(--bad)}
+.btn.small{padding:7px 12px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.muted{color:var(--muted)}
+h2{font-size:22px;font-weight:900;color:var(--brand-dark);margin-bottom:10px}
+h3{font-size:16px;font-weight:800;margin-bottom:8px}
+label{font-weight:700;font-size:13px;display:block;margin:12px 0 5px}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.info{background:var(--info-bg);color:var(--brand)}
+/* Alumnado */
+.kid{max-width:820px;margin:0 auto;padding:18px 16px 60px}
+.kid h2{font-size:26px;text-align:center;line-height:1.25}
+.q{font-size:24px;font-weight:900;text-align:center;color:var(--brand-dark);margin:8px 0 6px;line-height:1.3}
+.qsub{text-align:center;color:var(--muted);font-size:16px;margin-bottom:16px}
+.name{background:#fff;border:3px solid var(--line);border-radius:16px;padding:16px 10px;font-size:18px;font-weight:800;color:var(--ink);text-align:center;min-height:68px;transition:all .15s;position:relative}
+.name:hover:not(:disabled){border-color:var(--brand);transform:translateY(-2px)}
+.name.sel{background:var(--info-bg);border-color:var(--brand);color:var(--brand-dark)}
+.name.sel::after{content:attr(data-n);position:absolute;top:-10px;right:-10px;background:var(--brand);color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;line-height:28px}
+.name:disabled{opacity:.35;cursor:not-allowed}
+.name.done{opacity:.5}
+.prog{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.prog>div{height:100%;background:linear-gradient(90deg,#22C55E,var(--brand));transition:width .3s}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.nav .btn{font-size:18px;padding:14px 26px}
+.rk{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rk .nm{flex:1 1 160px;font-weight:800;font-size:18px}
+.faces{display:flex;gap:6px;flex-wrap:wrap}
+.face{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:6px 8px;min-width:64px;font-size:12px;font-weight:800;color:var(--muted);text-align:center}
+.face span{display:block;font-size:26px;line-height:1.1}
+.face.on{border-color:var(--brand);background:var(--info-bg);color:var(--brand-dark)}
+/* Resultados */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{padding:9px 14px;border-radius:10px;background:#fff;border:1.5px solid var(--line);font-weight:800;font-size:14px;color:var(--muted)}
+.tab.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+th,td{border:1px solid var(--line);padding:7px 8px;text-align:center}
+th{background:#F1F5F9;font-size:12px;font-weight:800;cursor:default}
+th.sort{cursor:pointer}
+th.sort:hover{background:#E2E8F0}
+td.l,th.l{text-align:left;white-space:nowrap}
+.e{color:var(--ok);font-weight:800}.r{color:var(--bad);font-weight:800}
+td.mx{width:30px;height:30px;padding:0;font-weight:900}
+td.mxE{background:var(--ok-bg);color:var(--ok)}
+td.mxR{background:var(--bad-bg);color:var(--bad)}
+td.self{background:#E2E8F0}
+th.vert{writing-mode:vertical-rl;transform:rotate(180deg);height:110px;white-space:nowrap;font-weight:700}
+.alert{border-left:5px solid;padding:12px 14px;border-radius:10px;margin-bottom:10px}
+.alert.bad{border-color:var(--bad);background:var(--bad-bg)}
+.alert.warn{border-color:var(--warn);background:var(--warn-bg)}
+.alert.info{border-color:var(--brand);background:var(--info-bg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.kpi b{font-size:28px;display:block;color:var(--brand-dark)}
+.kpi span{font-size:13px;color:var(--muted);font-weight:700}
+svg text{font-family:inherit}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:5px}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal .card{max-width:380px;width:100%}
+@media print{
+  .no-print{display:none!important}
+  body{background:#fff}
+  .card{border:none;padding:0}
+  .wrap{max-width:none;padding:0}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ==========================================================================
+   SOCIOGRAMA DE AULA
+   Todos os datos gárdanse SÓ neste navegador (localStorage). Non se envía
+   nada a ningún servidor. Para xuntar respostas de varios dispositivos,
+   úsase exportar/importar ficheiro JSON desde o panel do profesorado.
+   ========================================================================== */
+
+const STORE_KEY = 'sociograma_aula_v1';
+
+const MODELS = {
+  A: {
+    nome: '1º e 2º ciclo (versión simple)',
+    nominacions: [
+      { k:'xs', tipo:'E', ambito:'xogar', curto:'Eleccións',
+        txt:'Quen son os tres nenos ou nenas da túa clase cos que MÁIS che gusta xogar ou estar?',
+        por:'Por que che gusta xogar ou estar con eles ou con elas?' },
+      { k:'xn', tipo:'R', ambito:'xogar', curto:'Rexeitamentos',
+        txt:'Quen son os tres nenos ou nenas da túa clase cos que MENOS che gusta xogar ou estar?',
+        por:'Por que non che gusta xogar ou estar con eles ou con elas?' }
+    ],
+    atributos: [
+      { k:'a1', s:+1, txt:'Ten moitos amigos e amigas' },
+      { k:'a2', s:+1, txt:'Está alegre moitas veces' },
+      { k:'a3', s:+1, txt:'Axuda aos outros nenos e nenas' },
+      { k:'a4', s:-1, txt:'Está triste moitas veces' },
+      { k:'a5', s:-1, txt:'Ten poucos amigos e está só ou soa moitas veces' },
+      { k:'a6', s:-1, txt:'Insulta e pelexa' }
+    ],
+    rankingTxt: 'Canto che gusta xogar ou estar con...?',
+    escala: [ {v:1,t:'Moito',e:'😀'}, {v:2,t:'Regular',e:'😐'}, {v:3,t:'Pouco',e:'🙁'} ],
+    corteRanking: 2.5
+  },
+  B: {
+    nome: '3º ciclo / 4º-6º EP (cuestionario completo)',
+    nominacions: [
+      { k:'ts', tipo:'E', ambito:'traballar', curto:'E. traballar',
+        txt:'Quen son os tres rapaces ou rapazas da túa clase cos que MÁIS che gusta traballar?',
+        por:'Por que che gusta traballar con eles ou con elas?' },
+      { k:'tn', tipo:'R', ambito:'traballar', curto:'R. traballar',
+        txt:'Quen son os tres rapaces ou rapazas da túa clase cos que MENOS che gusta traballar?',
+        por:'Por que non che gusta traballar con eles ou con elas?' },
+      { k:'ls', tipo:'E', ambito:'libre', curto:'E. tempo libre',
+        txt:'Quen son os tres rapaces ou rapazas da túa clase cos que MÁIS che gusta estar no tempo libre (saír, nos recreos...)?',
+        por:'Por que che gusta estar con eles ou con elas?' },
+      { k:'ln', tipo:'R', ambito:'libre', curto:'R. tempo libre',
+        txt:'Quen son os tres rapaces ou rapazas da túa clase cos que MENOS che gusta estar no tempo libre (saír, nos recreos...)?',
+        por:'Por que non che gusta estar con eles ou con elas?' }
+    ],
+    atributos: [
+      { k:'a1',  s:+1, txt:'Ter moitos amigos/as' },
+      { k:'a2',  s:-1, txt:'Non ter amigos/as' },
+      { k:'a3',  s:+1, txt:'Levarse ben cos profesores/as' },
+      { k:'a4',  s:-1, txt:'Levarse mal cos profesores/as' },
+      { k:'a5',  s:+1, txt:'Ser simpático/a cos compañeiros/as' },
+      { k:'a6',  s:-1, txt:'Ser antipático/a cos compañeiros/as' },
+      { k:'a7',  s:+1, txt:'A súa capacidade para atender e escoitar aos demais' },
+      { k:'a8',  s:-1, txt:'Estar frecuentemente a chamar a atención dos demais' },
+      { k:'a9',  s:+1, txt:'A súa capacidade para resolver conflitos entre compañeiros/as' },
+      { k:'a10', s:-1, txt:'A súa agresividade' },
+      { k:'a11', s:+1, txt:'Saber comunicarse' },
+      { k:'a12', s:-1, txt:'Ter problemas para comunicarse' }
+    ],
+    rankingTxt: 'Como che cae...?',
+    escala: [ {v:1,t:'Moi ben',e:'😄'}, {v:2,t:'Ben',e:'🙂'}, {v:3,t:'Regular',e:'😐'}, {v:4,t:'Mal',e:'🙁'}, {v:5,t:'Moi mal',e:'😣'} ],
+    corteRanking: 3.5
+  }
+};
+
+/* ---------------- Estado ---------------- */
+let S = load();
+let V = { view: S.config ? 'home' : 'setup', kid:null, step:0, draft:null, tab:'resumo', sort:{k:'nome',d:1}, filtro:'E', modal:null, unlocked:false };
+
+function blank(){ return { config:null, respostas:{} }; }
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && typeof s==='object') return Object.assign(blank(), s); } catch(e){}
+  return blank();
+}
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
+  catch(e){ alert('Non se puideron gardar os datos neste navegador. Exporta os datos para non perdelos.'); }
+}
+const M = () => MODELS[S.config.modelo];
+const al = () => S.config.alumnos;
+const byId = id => al().find(a => a.id === id);
+const nm = id => (byId(id)||{nome:'?'}).nome;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
+const curto = n => { const p = n.trim().split(/\s+/); return p.length>1 ? p[0]+' '+p[1][0]+'.' : p[0]; };
+const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+const uid = () => Math.random().toString(36).slice(2,9);
+
+/* ---------------- Render principal ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  let h = '';
+  switch (V.view){
+    case 'setup':   h = viewSetup(); break;
+    case 'home':    h = viewHome(); break;
+    case 'kidpick': h = viewKidPick(); break;
+    case 'kid':     h = viewKid(); break;
+    case 'kidend':  h = viewKidEnd(); break;
+    case 'results': h = viewResults(); break;
+  }
+  if (V.modal) h += V.modal;
+  app.innerHTML = h;
+  if (V.view==='results' && V.tab==='grafo') drawGraph();
+}
+
+function topbar(sub, right=''){
+  return `<div class="top no-print"><div><h1>🕸️ Sociograma de aula</h1><small>${esc(sub)}</small></div><div class="row">${right}</div></div>`;
+}
+
+/* ---------------- Configuración ---------------- */
+function viewSetup(){
+  const c = S.config || { grupo:'', modelo:'B', alumnos:[], pin:'' };
+  const hasResp = Object.keys(S.respostas).length>0;
+  return topbar('Configuración do grupo', S.config ? `<button class="btn ghost" onclick="go('home')">Volver</button>` : '') + `
+  <div class="wrap">
+    <div class="card">
+      <h2>Configurar o grupo</h2>
+      <p class="muted">Os datos quedan gardados <b>só neste dispositivo</b>. Non se envían a ningún servidor.</p>
+      <label>Nome do grupo</label>
+      <input id="f-grupo" value="${esc(c.grupo)}" placeholder="Ex.: 4º EP A — curso 2026/27">
+      <label>Cuestionario</label>
+      <select id="f-modelo" ${hasResp?'disabled':''}>
+        ${Object.entries(MODELS).map(([k,m])=>`<option value="${k}" ${c.modelo===k?'selected':''}>${esc(m.nome)}</option>`).join('')}
+      </select>
+      ${hasResp?'<div class="hint">Non se pode cambiar o cuestionario porque xa hai respostas gardadas.</div>':''}
+      <label>Alumnado (un nome por liña)</label>
+      <textarea id="f-alumnos" rows="12" placeholder="Ana Pérez López&#10;Brais Castro Vila&#10;...">${esc(c.alumnos.map(a=>a.nome).join('\n'))}</textarea>
+      <div class="hint">Se xa hai respostas, mantéñense as dos nomes que non cambies.</div>
+      <label>PIN do profesorado (para ver resultados e saír do modo alumnado)</label>
+      <input id="f-pin" type="password" inputmode="numeric" value="${esc(c.pin)}" placeholder="Mínimo 4 díxitos">
+      <div class="row" style="margin-top:18px"><button class="btn" onclick="saveSetup()">Gardar</button></div>
+    </div>
+    ${!S.config ? `<div class="card"><h3>Xa tes datos doutro dispositivo?</h3>
+      <p class="muted" style="margin-bottom:10px">Podes importar un ficheiro exportado desde esta aplicación.</p>
+      <input type="file" accept=".json,application/json" onchange="importFile(this)"></div>` : ''}
+  </div>`;
+}
+
+function saveSetup(){
+  const grupo = document.getElementById('f-grupo').value.trim();
+  const modelo = document.getElementById('f-modelo').value;
+  const pin = document.getElementById('f-pin').value.trim();
+  const nomes = document.getElementById('f-alumnos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (nomes.length < 4) return alert('Introduce polo menos 4 nomes.');
+  const dup = nomes.find((n,i)=>nomes.findIndex(m=>norm(m)===norm(n))!==i);
+  if (dup) return alert('Hai un nome repetido: '+dup+'. Engade un apelido para distinguilos.');
+  if (pin.length < 4) return alert('O PIN debe ter polo menos 4 caracteres.');
+  const prev = S.config ? S.config.alumnos : [];
+  const alumnos = nomes.map(n => prev.find(p=>norm(p.nome)===norm(n)) || { id:uid(), nome:n });
+  const ids = new Set(alumnos.map(a=>a.id));
+  // eliminar respostas de alumnado borrado e referencias a el
+  for (const k of Object.keys(S.respostas)) if (!ids.has(k)) delete S.respostas[k];
+  for (const r of Object.values(S.respostas)) cleanRefs(r, ids);
+  S.config = { grupo: grupo || 'Grupo sen nome', modelo, alumnos, pin };
+  save(); V.unlocked = true; go('home');
+}
+function cleanRefs(r, ids){
+  for (const k in r.nom) r.nom[k] = r.nom[k].filter(i=>ids.has(i));
+  for (const k in r.atr) if (r.atr[k] && !ids.has(r.atr[k])) r.atr[k] = null;
+  for (const k in r.rank) if (!ids.has(k)) delete r.rank[k];
+}
+
+/* ---------------- Inicio ---------------- */
+function viewHome(){
+  const n = al().length, r = Object.keys(S.respostas).length;
+  return topbar(S.config.grupo) + `
+  <div class="wrap">
+    <div class="kpis">
+      <div class="kpi"><b>${n}</b><span>alumnos/as</span></div>
+      <div class="kpi"><b>${r}</b><span>cuestionarios respondidos</span></div>
+      <div class="kpi"><b>${n-r}</b><span>pendentes</span></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+      <div class="card"><h3>🧒 Modo alumnado</h3>
+        <p class="muted" style="margin-bottom:14px">Cada neno ou nena toca o seu nome e responde ás preguntas. Ao rematar, volve á lista para o seguinte.</p>
+        <button class="btn" onclick="go('kidpick')">Comezar</button></div>
+      <div class="card"><h3>📊 Resultados</h3>
+        <p class="muted" style="margin-bottom:14px">Táboa sociométrica, atributos, popularidade, alertas e sociograma.</p>
+        <button class="btn" onclick="needPin(()=>{V.tab='resumo';go('results')})">Ver resultados</button></div>
+      <div class="card"><h3>⚙️ Grupo</h3>
+        <p class="muted" style="margin-bottom:14px">${esc(M().nome)}</p>
+        <button class="btn sec" onclick="needPin(()=>go('setup'))">Editar grupo</button></div>
+    </div>
+  </div>`;
+}
+
+function needPin(fn){
+  if (V.unlocked) return fn();
+  window._pinCb = fn;
+  V.modal = `<div class="modal no-print"><div class="card"><h3>PIN do profesorado</h3>
+    <input id="pin-in" type="password" inputmode="numeric" autofocus onkeydown="if(event.key==='Enter')checkPin()">
+    <div class="row" style="margin-top:12px"><button class="btn" onclick="checkPin()">Entrar</button><button class="btn sec" onclick="V.modal=null;render()">Cancelar</button></div></div></div>`;
+  render(); setTimeout(()=>{const i=document.getElementById('pin-in'); if(i) i.focus();},50);
+}
+function checkPin(){
+  const v = document.getElementById('pin-in').value.trim();
+  if (v !== S.config.pin) { alert('PIN incorrecto'); return; }
+  V.modal = null; V.unlocked = true; const f = window._pinCb; window._pinCb = null; f && f();
+}
+function go(view){ V.view = view; window.scrollTo(0,0); render(); }
+function lock(){ V.unlocked = false; }
+
+/* ---------------- Modo alumnado ---------------- */
+function viewKidPick(){
+  return topbar(S.config.grupo, `<button class="btn ghost" onclick="needPin(()=>go('home'))">🔒 Saír</button>`) + `
+  <div class="kid">
+    <h2 style="margin:14px 0 6px">Ola! 👋 Quen es ti?</h2>
+    <p class="qsub">Toca o teu nome para comezar</p>
+    <div class="grid">
+      ${al().map(a=>{ const d = !!S.respostas[a.id];
+        return `<button class="name ${d?'done':''}" ${d?'disabled':''} onclick="startKid('${a.id}')">${esc(a.nome)}${d?' ✅':''}</button>`; }).join('')}
+    </div>
+  </div>`;
+}
+function startKid(id){
+  lock();
+  V.kid = id; V.step = 0;
+  V.draft = { nom:{}, por:{}, atr:{}, rank:{} };
+  M().nominacions.forEach(q=>{ V.draft.nom[q.k]=[]; V.draft.por[q.k]=''; });
+  go('kid');
+}
+function steps(){
+  const m = M(), s = [{t:'intro'}];
+  m.nominacions.forEach(q=>s.push({t:'nom', q}));
+  m.atributos.forEach((a,i)=>s.push({t:'atr', a, i}));
+  s.push({t:'rank'});
+  return s;
+}
+function viewKid(){
+  const st = steps(), cur = st[V.step], m = M(), d = V.draft;
+  const others = al().filter(a=>a.id!==V.kid);
+  const pct = Math.round(V.step/(st.length-1)*100);
+  let body = '', canNext = true, nextTxt = 'Seguinte ➜';
+
+  if (cur.t==='intro'){
+    body = `<h2 style="margin-top:20px">Ola, ${esc(nm(V.kid).split(' ')[0])}! 😊</h2>
+      <p class="qsub" style="font-size:19px;margin-top:14px">Imos facer unhas preguntas sobre os teus compañeiros e compañeiras.<br>
+      Non hai respostas boas nin malas. <b>Contesta con sinceridade.</b><br>
+      As túas respostas son <b>secretas</b>: só as ve o teu profesor ou profesora.</p>`;
+    nextTxt = 'Comezar ➜';
+  }
+  else if (cur.t==='nom'){
+    const q = cur.q, sel = d.nom[q.k];
+    const opp = m.nominacions.find(o=>o.ambito===q.ambito && o.tipo!==q.tipo);
+    const blocked = new Set(opp ? d.nom[opp.k] : []);
+    body = `<div class="q">${esc(q.txt)}</div>
+      <p class="qsub">Escolle ata 3 ${q.tipo==='E'?'💚':'—'} (${sel.length}/3)</p>
+      <div class="grid">${others.map(a=>{ const i = sel.indexOf(a.id);
+        return `<button class="name ${i>=0?'sel':''}" data-n="${i+1}" ${blocked.has(a.id)?'disabled title="Xa o/a escolliches na outra pregunta"':''} onclick="toggleNom('${q.k}','${a.id}')">${esc(a.nome)}</button>`; }).join('')}</div>
+      ${sel.length ? `<label style="font-size:17px;margin-top:20px">${esc(q.por)}</label>
+      <textarea rows="3" style="font-size:17px" placeholder="Escribe aquí (se queres)" oninput="V.draft.por['${q.k}']=this.value">${esc(d.por[q.k])}</textarea>` : ''}`;
+  }
+  else if (cur.t==='atr'){
+    const a = cur.a, v = d.atr[a.k];
+    body = `<div class="qsub" style="margin:4px 0">Quen da túa clase destaca por...</div>
+      <div class="q" style="font-size:27px">${esc(a.txt)}?</div>
+      <p class="qsub">Toca un nome (pregunta ${cur.i+1} de ${m.atributos.length})</p>
+      <div class="grid">${others.map(o=>`<button class="name ${v===o.id?'sel':''}" data-n="✓" onclick="pickAtr('${a.k}','${o.id}')">${esc(o.nome)}</button>`).join('')}
+      <button class="name ${v===null?'sel':''}" data-n="✓" style="border-style:dashed" onclick="pickAtr('${a.k}',null)">🤷 Ninguén / Non sei</button></div>`;
+    canNext = a.k in d.atr;
+  }
+  else if (cur.t==='rank'){
+    const done = others.filter(o=>d.rank[o.id]).length;
+    body = `<div class="q">${esc(m.rankingTxt)}</div>
+      <p class="qsub">Toca unha cara para cada compañeiro ou compañeira (${done}/${others.length})</p>
+      <div class="card" style="padding:8px 14px">${others.map(o=>`<div class="rk"><div class="nm">${esc(o.nome)}</div><div class="faces">
+        ${m.escala.map(e=>`<button class="face ${d.rank[o.id]===e.v?'on':''}" onclick="setRank('${o.id}',${e.v})"><span>${e.e}</span>${e.t}</button>`).join('')}
+      </div></div>`).join('')}</div>`;
+    nextTxt = 'Rematar ✔';
+  }
+
+  return `<div class="top no-print"><div><h1>${esc(nm(V.kid))}</h1><small>${esc(S.config.grupo)}</small></div>
+    <button class="btn ghost" onclick="if(confirm('Saír sen gardar?'))go('kidpick')">✕ Saír</button></div>
+  <div class="kid"><div class="prog"><div style="width:${pct}%"></div></div>${body}
+    <div class="nav">
+      <button class="btn sec" ${V.step===0?'style="visibility:hidden"':''} onclick="V.step--;go('kid')">⬅ Atrás</button>
+      <button class="btn" ${canNext?'':'disabled'} onclick="nextStep()">${nextTxt}</button>
+    </div></div>`;
+}
+function toggleNom(k,id){
+  const a = V.draft.nom[k], i = a.indexOf(id);
+  if (i>=0) a.splice(i,1); else if (a.length<3) a.push(id);
+  const y = window.scrollY; render(); window.scrollTo(0,y);
+}
+function pickAtr(k,id){
+  V.draft.atr[k] = id; render();
+  const at = V.step;
+  setTimeout(()=>{ if (V.view==='kid' && V.step===at) nextStep(); }, 280);
+}
+function setRank(id,v){ V.draft.rank[id] = v; const y = window.scrollY; render(); window.scrollTo(0,y); }
+function nextStep(){
+  const st = steps(), cur = st[V.step];
+  if (cur.t==='nom' && V.draft.nom[cur.q.k].length===0 &&
+      !confirm('Non escolliches a ninguén. Queres seguir igualmente?')) return;
+  if (cur.t==='rank'){
+    const others = al().filter(a=>a.id!==V.kid), falta = others.filter(o=>!V.draft.rank[o.id]).length;
+    if (falta && !confirm(`Faltan ${falta} compañeiros/as por valorar. Rematar igualmente?`)) return;
+    S.respostas[V.kid] = Object.assign({ data:new Date().toISOString() }, V.draft);
+    save(); V.draft = null; go('kidend'); return;
+  }
+  V.step++; go('kid');
+}
+function viewKidEnd(){
+  return `<div class="kid" style="text-align:center;padding-top:80px">
+    <div style="font-size:80px">🎉</div><h2>Moitas grazas!</h2>
+    <p class="qsub" style="font-size:19px">Xa remataches. Avisa ao teu profe.</p>
+    <button class="btn" style="font-size:18px;padding:14px 28px;margin-top:20px" onclick="go('kidpick')">Seguinte compañeiro/a ➜</button></div>`;
+}
+
+/* ---------------- Cálculos ---------------- */
+function calc(){
+  const m = M(), A = al(), R = S.respostas;
+  const respIds = Object.keys(R).filter(id=>byId(id));
+  const rows = A.map(a=>({ id:a.id, nome:a.nome, resp:!!R[a.id], E:{}, Rj:{}, tE:0, tR:0, pref:0,
+    pos:0, neg:0, atr:{}, rSum:0, rN:0, pop:null, rejecters:new Set(), choosers:new Set(), mutE:[], mutR:[], flags:[] }));
+  const row = id => rows.find(r=>r.id===id);
+  rows.forEach(r=>{ m.nominacions.forEach(q=>{ (q.tipo==='E'?r.E:r.Rj)[q.k]=0; }); m.atributos.forEach(x=>r.atr[x.k]=0); });
+
+  for (const from of respIds){
+    const r = R[from];
+    m.nominacions.forEach(q=>{
+      (r.nom[q.k]||[]).forEach(to=>{ const t=row(to); if(!t) return;
+        if (q.tipo==='E'){ t.E[q.k]++; t.tE++; t.choosers.add(from); }
+        else { t.Rj[q.k]++; t.tR++; t.rejecters.add(from); }
+      });
+    });
+    m.atributos.forEach(x=>{ const t = r.atr && r.atr[x.k] && row(r.atr[x.k]); if(!t) return;
+      t.atr[x.k]++; if (x.s>0) t.pos++; else t.neg++; });
+    for (const [to,v] of Object.entries(r.rank||{})){ const t=row(to); if(t){ t.rSum+=v; t.rN++; } }
+  }
+  const chose = (a,b,tipo) => { const r=R[a]; if(!r) return false;
+    return m.nominacions.some(q=>q.tipo===tipo && (r.nom[q.k]||[]).includes(b)); };
+  rows.forEach(r=>{
+    r.pref = r.tE - r.tR;
+    r.pop = r.rN ? r.rSum/r.rN : null;
+    rows.forEach(o=>{ if (o.id===r.id) return;
+      if (chose(r.id,o.id,'E') && chose(o.id,r.id,'E')) r.mutE.push(o.id);
+      if (chose(r.id,o.id,'R') && chose(o.id,r.id,'R')) r.mutR.push(o.id); });
+    const others = respIds.filter(i=>i!==r.id).length;
+    const umbral = others/3;
+    const byCount = r.rejecters.size > umbral && r.rejecters.size>0;
+    const byRank = r.pop!==null && r.pop >= m.corteRanking;
+    r.umbral = umbral; r.byCount = byCount; r.byRank = byRank;
+    if (byCount && byRank) r.flags.push({c:'bad', t:'Rexeitado/a'});
+    else if (byCount || byRank) r.flags.push({c:'warn', t:'Posible rexeitamento'});
+    if (respIds.length && r.tE===0) r.flags.push({c:'bad', t:'Illado/a (0 eleccións)'});
+    if (r.neg>=3 && r.neg>r.pos) r.flags.push({c:'warn', t:'Predominan atributos negativos'});
+    if (r.mutE.length===0 && r.tE>0) r.flags.push({c:'info', t:'Sen eleccións recíprocas'});
+  });
+  return { rows, respIds, m };
+}
+
+/* ---------------- Resultados ---------------- */
+const TABS = [['resumo','Resumo e alertas'],['taboa','Táboa sociométrica'],['atributos','Atributos (P5)'],['popularidade','Popularidade (P6)'],['matriz','Matriz'],['grafo','Sociograma'],['motivos','Motivos'],['datos','Datos']];
+
+function viewResults(){
+  const C = calc();
+  let body = '';
+  if (!C.respIds.length && V.tab!=='datos') body = `<div class="card"><p>Aínda non hai respostas. Usa o <b>modo alumnado</b> para que o grupo responda.</p></div>`;
+  else body = ({resumo:tResumo, taboa:tTaboa, atributos:tAtributos, popularidade:tPop, matriz:tMatriz, grafo:tGrafo, motivos:tMotivos, datos:tDatos})[V.tab](C);
+  return topbar(S.config.grupo+' · '+C.respIds.length+'/'+al().length+' respostas',
+    `<button class="btn ghost" onclick="window.print()">🖨️ Imprimir</button><button class="btn ghost" onclick="lock();go('home')">🔒 Pechar</button>`) + `
+  <div class="wrap">
+    <div class="tabs no-print">${TABS.map(([k,t])=>`<button class="tab ${V.tab===k?'on':''}" onclick="V.tab='${k}';V.filtro='E';render()">${t}</button>`).join('')}</div>
+    ${body}
+  </div>`;
+}
+const fmt = x => x===null ? '—' : x.toFixed(2).replace('.',',');
+const pills = r => r.flags.map(f=>`<span class="pill ${f.c}">${esc(f.t)}</span>`).join(' ');
+
+function tResumo(C){
+  const {rows, respIds, m} = C;
+  const resp = rows.filter(r=>r.resp).length;
+  const maxE = [...rows].sort((a,b)=>b.tE-a.tE)[0];
+  const graves = rows.filter(r=>r.flags.some(f=>f.c==='bad'));
+  const avisos = rows.filter(r=>!r.flags.some(f=>f.c==='bad') && r.flags.some(f=>f.c==='warn'));
+  const pend = rows.filter(r=>!r.resp);
+  const mutuas = rows.reduce((s,r)=>s+r.mutE.length,0)/2;
+  const popM = rows.filter(r=>r.pop!==null); const popAvg = popM.length ? popM.reduce((s,r)=>s+r.pop,0)/popM.length : null;
+  const card = r => `<div class="alert ${r.flags.some(f=>f.c==='bad')?'bad':'warn'}"><b>${esc(r.nome)}</b> ${pills(r)}
+     <div class="hint" style="color:inherit">Eleccións: <b>${r.tE}</b> · Rexeitamentos: <b>${r.tR}</b> (de ${r.rejecters.size} compañeiros/as; limiar &gt; ${fmt(r.umbral)}) · Preferencia social: <b>${r.pref}</b> · Popularidade: <b>${fmt(r.pop)}</b> · Atributos +${r.pos} / −${r.neg}</div></div>`;
+  return `
+  <div class="kpis">
+    <div class="kpi"><b>${resp}/${rows.length}</b><span>respostas</span></div>
+    <div class="kpi"><b>${mutuas}</b><span>parellas de eleccións recíprocas</span></div>
+    <div class="kpi"><b>${fmt(popAvg)}</b><span>popularidade media do grupo (1 = mellor)</span></div>
+    <div class="kpi"><b>${esc(maxE?curto(maxE.nome):'—')}</b><span>máis elixido/a (${maxE?maxE.tE:0})</span></div>
+  </div>
+  ${pend.length?`<div class="alert info">Faltan por responder: ${pend.map(r=>esc(r.nome)).join(', ')}. Os índices calcúlanse coas respostas dispoñibles.</div>`:''}
+  <div class="card"><h3>🚨 Situacións que requiren atención (${graves.length})</h3>
+    ${graves.length?graves.map(card).join(''):'<p class="muted">Ningún alumno/a cumpre os criterios de rexeitamento ou illamento.</p>'}</div>
+  <div class="card"><h3>⚠️ Indicadores a observar (${avisos.length})</h3>
+    ${avisos.length?avisos.map(card).join(''):'<p class="muted">Sen indicadores adicionais.</p>'}</div>
+  <div class="card"><h3>Criterios aplicados</h3><ul class="muted" style="padding-left:20px;line-height:1.7;font-size:14px">
+    <li><b>Rexeitado/a</b>: rexeitado por máis dun terzo dos compañeiros/as que contestaron <b>e</b> popularidade ≥ ${fmt(m.corteRanking)} na escala 1–${m.escala.length}. Se só se cumpre un dos dous: <i>posible rexeitamento</i>.</li>
+    <li><b>Illado/a</b>: ningunha elección recibida.</li>
+    <li><b>Preferencia social</b> = total de eleccións − total de rexeitamentos.</li>
+    <li><b>Popularidade</b> = media das puntuacións recibidas na pregunta "${esc(m.rankingTxt)}" (1 = mellor; canto maior, peor estatus).</li>
+    <li>Interpreta sempre os resultados tendo en conta a tendencia xeral do grupo e a observación directa.</li></ul></div>`;
+}
+
+function sortRows(rows){
+  const {k,d} = V.sort;
+  return [...rows].sort((a,b)=>{ let x=a[k], y=b[k];
+    if (k==='nome') return d*x.localeCompare(y,'gl');
+    if (x===null) return 1; if (y===null) return -1;
+    return d*(x-y); });
+}
+function th(k,t){ const s=V.sort; return `<th class="sort ${k==='nome'?'l':''}" onclick="setSort('${k}')">${t}${s.k===k?(s.d>0?' ▲':' ▼'):''}</th>`; }
+function setSort(k){ V.sort = V.sort.k===k ? {k,d:-V.sort.d} : {k,d:k==='nome'?1:-1}; render(); }
+
+function tTaboa(C){
+  const {rows, m} = C;
+  rows.forEach(r=>{ m.nominacions.forEach(q=>{ r['q_'+q.k] = q.tipo==='E'?r.E[q.k]:r.Rj[q.k]; }); r.nMut=r.mutE.length; });
+  const qs = m.nominacions;
+  return `<div class="card"><h3>Táboa sociométrica (preguntas ${qs.map((_,i)=>i+1).join(', ')})</h3>
+  <p class="hint" style="margin-bottom:10px">Preme nunha cabeceira para ordenar.</p>
+  <div class="tbl"><table><thead><tr>${th('nome','Alumno/a')}
+    ${qs.filter(q=>q.tipo==='E').map(q=>th('q_'+q.k,q.curto)).join('')}${th('tE','TOTAL ELECCIÓNS')}
+    ${qs.filter(q=>q.tipo==='R').map(q=>th('q_'+q.k,q.curto)).join('')}${th('tR','TOTAL REXEIT.')}
+    ${th('pref','Preferencia social')}${th('nMut','Recíprocas')}<th>Indicadores</th></tr></thead><tbody>
+  ${sortRows(rows).map(r=>`<tr><td class="l">${esc(r.nome)}${r.resp?'':' <span class="pill info">sen resposta</span>'}</td>
+    ${qs.filter(q=>q.tipo==='E').map(q=>`<td class="e">${r.E[q.k]}</td>`).join('')}<td class="e">${r.tE}</td>
+    ${qs.filter(q=>q.tipo==='R').map(q=>`<td class="r">${r.Rj[q.k]}</td>`).join('')}<td class="r">${r.tR}</td>
+    <td><b>${r.pref>0?'+':''}${r.pref}</b></td><td>${r.nMut}</td><td style="text-align:left">${pills(r)}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="row no-print" style="margin-top:12px"><button class="btn sec small" onclick="exportCSV()">⬇ Descargar CSV (Excel)</button></div></div>`;
+}
+
+function tAtributos(C){
+  const {rows, m} = C;
+  const pos = m.atributos.filter(a=>a.s>0), neg = m.atributos.filter(a=>a.s<0);
+  return `<div class="card"><h3>Atributos perceptivos — "Adiviña quen é"</h3>
+  <div class="tbl"><table><thead><tr>${th('nome','Alumno/a')}
+    ${pos.map(a=>`<th class="vert" title="${esc(a.txt)}" style="color:var(--ok)">${esc(a.txt)}</th>`).join('')}${th('pos','ATRIB. POSITIVOS')}
+    ${neg.map(a=>`<th class="vert" title="${esc(a.txt)}" style="color:var(--bad)">${esc(a.txt)}</th>`).join('')}${th('neg','ATRIB. NEGATIVOS')}
+  </tr></thead><tbody>
+  ${sortRows(rows).map(r=>`<tr><td class="l">${esc(r.nome)}</td>
+    ${pos.map(a=>`<td>${r.atr[a.k]||''}</td>`).join('')}<td class="e">${r.pos}</td>
+    ${neg.map(a=>`<td>${r.atr[a.k]||''}</td>`).join('')}<td class="r">${r.neg}</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+
+function tPop(C){
+  const {rows, m} = C;
+  const max = m.escala.length;
+  return `<div class="card"><h3>Aceptación media ou índice de popularidade</h3>
+  <p class="hint" style="margin-bottom:12px">Escala: ${m.escala.map(e=>`${e.v} = ${e.t}`).join(' · ')}. Canto maior a puntuación, peor estatus sociométrico.</p>
+  <div class="tbl"><table><thead><tr>${th('nome','Alumno/a')}${th('pop','Popularidade')}<th>Valoracións</th>
+    ${m.escala.map(e=>`<th>${e.e} ${e.t}</th>`).join('')}<th style="min-width:180px">Gráfico</th></tr></thead><tbody>
+  ${sortRows(rows).map(r=>{
+    const dist = m.escala.map(e=>Object.values(S.respostas).filter(x=>x.rank && x.rank[r.id]===e.v).length);
+    const w = r.pop===null?0:((r.pop-1)/(max-1))*100;
+    const col = r.pop===null?'#CBD5E1': r.pop>=m.corteRanking?'var(--bad)': r.pop>=(max+1)/2?'var(--warn)':'var(--ok)';
+    return `<tr><td class="l">${esc(r.nome)}</td><td><b>${fmt(r.pop)}</b></td><td>${r.rN}</td>
+      ${dist.map(n=>`<td>${n||''}</td>`).join('')}
+      <td style="text-align:left"><div style="background:#F1F5F9;border-radius:6px;height:12px;position:relative">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.max(w,2)}%;background:${col};border-radius:6px"></div></div></td></tr>`; }).join('')}
+  </tbody></table></div></div>`;
+}
+
+function tMatriz(C){
+  const m = M(), A = al();
+  const qsel = V.filtro;
+  const opts = [['E','Todas as eleccións'],['R','Todos os rexeitamentos'],['ER','Eleccións e rexeitamentos'],...m.nominacions.map(q=>[q.k,q.curto])];
+  const has = (from,to,tipo) => { const r=S.respostas[from]; if(!r) return false;
+    return m.nominacions.some(q=>(tipo? q.tipo===tipo : q.k===qsel) && (r.nom[q.k]||[]).includes(to)); };
+  const cell = (f,t) => {
+    if (f===t) return `<td class="mx self"></td>`;
+    const qi = m.nominacions.find(q=>q.k===qsel);
+    const e = qi ? (qi.tipo==='E' && has(f,t)) : (qsel.includes('E') && has(f,t,'E'));
+    const r = qi ? (qi.tipo==='R' && has(f,t)) : (qsel.includes('R') && has(f,t,'R'));
+    if (e && r) return `<td class="mx" style="background:var(--warn-bg)">±</td>`;
+    if (e) return `<td class="mx mxE">+</td>`;
+    if (r) return `<td class="mx mxR">−</td>`;
+    return `<td class="mx"></td>`;
+  };
+  return `<div class="card"><h3>Matriz sociométrica</h3>
+  <p class="hint">Filas: quen escolle · Columnas: quen é escollido/a. <span class="e">+</span> elección, <span class="r">−</span> rexeitamento.</p>
+  <div class="row no-print" style="margin:10px 0"><select style="max-width:300px" onchange="V.filtro=this.value;render()">
+    ${opts.map(([k,t])=>`<option value="${k}" ${qsel===k?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+  <div class="tbl"><table style="width:auto"><thead><tr><th class="l">Escolle ↓ / Escollido/a →</th>
+    ${A.map(a=>`<th class="vert">${esc(curto(a.nome))}</th>`).join('')}</tr></thead><tbody>
+    ${A.map(f=>`<tr><td class="l">${esc(f.nome)}${S.respostas[f.id]?'':' <span class="muted">(sen resposta)</span>'}</td>${A.map(t=>cell(f.id,t.id)).join('')}</tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+
+function tGrafo(C){
+  const m = M();
+  const opts = [['E','Eleccións (todas)'],['R','Rexeitamentos (todos)'],['M','Só eleccións recíprocas'],...m.nominacions.map(q=>[q.k,q.curto])];
+  return `<div class="card"><h3>Sociograma (diana)</h3>
+  <p class="hint">Canto máis preto do centro, máis eleccións recibe. As frechas van de quen escolle a quen é escollido/a; as liñas grosas sen frecha son eleccións recíprocas.</p>
+  <div class="row no-print" style="margin:10px 0"><select style="max-width:300px" onchange="V.filtro=this.value;render()">
+    ${opts.map(([k,t])=>`<option value="${k}" ${V.filtro===k?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+  <div id="graph" style="width:100%;max-width:760px;margin:0 auto"></div>
+  <div class="legend"><span><i style="background:#22C55E"></i>Sen indicadores</span><span><i style="background:#F59E0B"></i>Indicadores a observar</span>
+  <span><i style="background:#EF4444"></i>Rexeitado/a ou illado/a</span><span><i style="background:#CBD5E1"></i>Sen resposta propia</span></div></div>`;
+}
+function drawGraph(){
+  const el = document.getElementById('graph'); if (!el) return;
+  const {rows, m} = calc(), R = S.respostas, f = V.filtro;
+  const W = 760, c = W/2, n = rows.length;
+  const maxE = Math.max(1, ...rows.map(r=>r.tE));
+  // ordenar por eleccións para colocar no círculo, alternando para repartir
+  const order = [...rows].sort((a,b)=>a.nome.localeCompare(b.nome,'gl'));
+  const pos = {};
+  order.forEach((r,i)=>{
+    const ang = -Math.PI/2 + i*2*Math.PI/n;
+    const rad = 60 + (1 - r.tE/maxE) * (c-110);
+    pos[r.id] = { x: c + rad*Math.cos(ang), y: c + rad*Math.sin(ang) };
+  });
+  const edges = [];
+  const sel = (q) => f==='E'||f==='M' ? q.tipo==='E' : f==='R' ? q.tipo==='R' : q.k===f;
+  const seen = new Set();
+  for (const [from, r] of Object.entries(R)){
+    m.nominacions.filter(sel).forEach(q=>(r.nom[q.k]||[]).forEach(to=>{
+      if (!pos[from]||!pos[to]) return;
+      const key = from+'>'+to; if (seen.has(key)) return; seen.add(key);
+      edges.push({from,to,tipo:q.tipo});
+    }));
+  }
+  const mutual = e => seen.has(e.to+'>'+e.from);
+  let svg = `<svg viewBox="0 0 ${W} ${W}" width="100%" xmlns="http://www.w3.org/2000/svg">
+   <defs><marker id="aE" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#16A34A"/></marker>
+   <marker id="aR" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#DC2626"/></marker></defs>`;
+  [1,2,3].forEach(k=>svg+=`<circle cx="${c}" cy="${c}" r="${60+(c-110)*k/3}" fill="none" stroke="#E2E8F0" stroke-dasharray="4 5"/>`);
+  const drawn = new Set();
+  edges.forEach(e=>{
+    const mu = mutual(e);
+    if (f==='M' && !mu) return;
+    if (mu){ const k=[e.from,e.to].sort().join('|'); if (drawn.has(k)) return; drawn.add(k); }
+    const a = pos[e.from], b = pos[e.to];
+    const dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy)||1, rr=19;
+    const x1=a.x+dx/L*rr, y1=a.y+dy/L*rr, x2=b.x-dx/L*(rr+3), y2=b.y-dy/L*(rr+3);
+    const col = e.tipo==='E' ? '#16A34A' : '#DC2626';
+    if (mu) svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3.5" opacity=".85"/>`;
+    else svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="1.4" opacity=".55" ${e.tipo==='R'?'stroke-dasharray="5 4"':''} marker-end="url(#a${e.tipo})"/>`;
+  });
+  rows.forEach(r=>{
+    const p = pos[r.id];
+    const col = !r.resp ? '#CBD5E1' : r.flags.some(x=>x.c==='bad') ? '#EF4444' : r.flags.some(x=>x.c==='warn') ? '#F59E0B' : '#22C55E';
+    const fill = r.resp ? col : '#F1F5F9';
+    svg += `<g><title>${esc(r.nome)} — E:${r.tE} R:${r.tR} PS:${r.pref}</title>
+      <circle cx="${p.x}" cy="${p.y}" r="18" fill="${fill}" stroke="${col}" stroke-width="3"/>
+      <text x="${p.x}" y="${p.y+4.5}" text-anchor="middle" font-size="12" font-weight="800" fill="${r.resp?'#fff':'#475569'}">${esc(iniciais(r.nome))}</text>
+      <text x="${p.x}" y="${p.y+33}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(curto(r.nome))}</text></g>`;
+  });
+  svg += '</svg>';
+  el.innerHTML = svg;
+}
+
+function tMotivos(C){
+  const m = M(), R = S.respostas;
+  const list = al().map(a=>{
+    const items = [];
+    for (const [from, r] of Object.entries(R)) m.nominacions.forEach(q=>{
+      if ((r.nom[q.k]||[]).includes(a.id) && r.por && r.por[q.k] && r.por[q.k].trim())
+        items.push({q, from, txt:r.por[q.k].trim()});
+    });
+    return {a, items};
+  }).filter(x=>x.items.length);
+  return `<div class="card"><h3>Motivos das eleccións e rexeitamentos</h3>
+  <p class="hint" style="margin-bottom:12px">Cada motivo aparece en todas as persoas que o neno/a nomeou nesa pregunta. Información confidencial.</p>
+  ${list.length? list.map(({a,items})=>`<div style="margin-bottom:14px"><b>${esc(a.nome)}</b><ul style="padding-left:20px;margin-top:4px;font-size:14px;line-height:1.6">
+    ${items.map(i=>`<li><span class="pill ${i.q.tipo==='E'?'ok':'bad'}">${esc(i.q.curto)}</span> <span class="muted">${esc(nm(i.from))}:</span> ${esc(i.txt)}</li>`).join('')}</ul></div>`).join('')
+  : '<p class="muted">Non hai motivos escritos.</p>'}</div>`;
+}
+
+function tDatos(C){
+  return `<div class="card"><h3>Respostas recibidas</h3>
+  <div class="tbl"><table><thead><tr><th class="l">Alumno/a</th><th>Estado</th><th>Data</th><th class="no-print"></th></tr></thead><tbody>
+  ${al().map(a=>{ const r=S.respostas[a.id];
+    return `<tr><td class="l">${esc(a.nome)}</td><td>${r?'<span class="pill ok">Respondido</span>':'<span class="pill warn">Pendente</span>'}</td>
+    <td>${r&&r.data?new Date(r.data).toLocaleString('gl-ES'):''}</td>
+    <td class="no-print">${r?`<button class="btn danger small" onclick="delResp('${a.id}')">Borrar para repetir</button>`:''}</td></tr>`; }).join('')}
+  </tbody></table></div></div>
+  <div class="card no-print"><h3>Copia de seguridade e varios dispositivos</h3>
+    <p class="muted" style="margin-bottom:12px">Se o alumnado responde en varias tabletas, exporta os datos de cada unha e impórtaos aquí: as respostas xúntanse automaticamente (por nome).</p>
+    <div class="row"><button class="btn" onclick="exportJSON()">⬇ Exportar datos (JSON)</button>
+    <button class="btn sec" onclick="exportCSV()">⬇ Táboa resumo (CSV)</button>
+    <label class="btn sec" style="margin:0;font-size:15px">⬆ Importar e xuntar<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this)"></label></div></div>
+  <div class="card no-print"><h3>Borrar todo</h3>
+    <p class="muted" style="margin-bottom:12px">Elimina o grupo e todas as respostas deste dispositivo. Exporta antes se queres conservalos.</p>
+    <button class="btn danger" onclick="wipe()">Borrar todos os datos</button></div>`;
+}
+
+/* ---------------- Datos: exportar / importar ---------------- */
+function download(name, text, type){
+  const b = new Blob([text], {type}); const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u), 1000);
+}
+const slug = () => norm(S.config.grupo).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'grupo';
+function exportJSON(){
+  download(`sociograma-${slug()}-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({app:'sociograma', v:1, ...S}, null, 2), 'application/json');
+}
+function exportCSV(){
+  const {rows, m} = calc();
+  const qE = m.nominacions.filter(q=>q.tipo==='E'), qR = m.nominacions.filter(q=>q.tipo==='R');
+  const head = ['Alumno/a', ...qE.map(q=>q.curto), 'Total eleccións', ...qR.map(q=>q.curto), 'Total rexeitamentos', 'Preferencia social',
+    'Eleccións recíprocas', 'Atributos positivos', 'Atributos negativos', 'Popularidade', 'Indicadores'];
+  const lines = [head, ...rows.map(r=>[r.nome, ...qE.map(q=>r.E[q.k]), r.tE, ...qR.map(q=>r.Rj[q.k]), r.tR, r.pref, r.mutE.length, r.pos, r.neg,
+    r.pop===null?'':r.pop.toFixed(2).replace('.',','), r.flags.map(f=>f.t).join(' / ')])];
+  const csv = '﻿' + lines.map(l=>l.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  download(`sociograma-${slug()}.csv`, csv, 'text/csv;charset=utf-8');
+}
+function importFile(input){
+  const file = input.files[0]; if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let d; try { d = JSON.parse(rd.result); } catch(e){ return alert('O ficheiro non é válido.'); }
+    if (!d || !d.config || !Array.isArray(d.config.alumnos) || typeof d.respostas!=='object') return alert('O ficheiro non ten o formato desta aplicación.');
+    if (!S.config){ S = { config:d.config, respostas:d.respostas||{} }; save(); V.unlocked=true; alert('Datos importados.'); go('home'); return; }
+    if (d.config.modelo !== S.config.modelo) return alert('O ficheiro usa outro modelo de cuestionario.');
+    // mapear ids do ficheiro aos ids locais por nome
+    const map = {}; let novos = 0, sen = [];
+    d.config.alumnos.forEach(a=>{ const l = al().find(x=>norm(x.nome)===norm(a.nome)); if (l) map[a.id]=l.id; else sen.push(a.nome); });
+    const tr = id => map[id];
+    for (const [fid, r] of Object.entries(d.respostas)){
+      const lid = tr(fid); if (!lid) continue;
+      const nr = { data:r.data, nom:{}, por:r.por||{}, atr:{}, rank:{} };
+      for (const k in r.nom) nr.nom[k] = (r.nom[k]||[]).map(tr).filter(Boolean);
+      for (const k in r.atr) nr.atr[k] = r.atr[k] ? (tr(r.atr[k])||null) : null;
+      for (const k in r.rank) if (tr(k)) nr.rank[tr(k)] = r.rank[k];
+      const cur = S.respostas[lid];
+      if (!cur || (r.data && cur.data && r.data > cur.data)) { S.respostas[lid] = nr; novos++; }
+    }
+    save();
+    alert(`Importadas ${novos} respostas.` + (sen.length ? `\nNomes non atopados neste grupo: ${sen.join(', ')}` : ''));
+    render();
+  };
+  rd.readAsText(file);
+  input.value = '';
+}
+function delResp(id){ if (!confirm('Borrar as respostas de '+nm(id)+'? Poderá volver respondelas.')) return; delete S.respostas[id]; save(); render(); }
+function wipe(){
+  if (!confirm('Seguro? Borraranse o grupo e todas as respostas deste dispositivo.')) return;
+  if (prompt('Escribe BORRAR para confirmar') !== 'BORRAR') return;
+  S = blank(); save(); V.unlocked=false; go('setup');
+}
+
+render();
+</script>
+</body>
+</html>
