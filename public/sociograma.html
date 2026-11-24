@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Sociograma de aula</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#F8FAFC;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--line:#E2E8F0;
@@ -13,39 +14,46 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Nunito','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 button{font-family:inherit;cursor:pointer;border:none}
-input,textarea,select{font-family:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:#fff;color:var(--ink)}
+input,textarea,select{font-family:inherit;font-size:16px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:#fff;color:var(--ink)}
 textarea{resize:vertical}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+.narrow{max-width:520px}
 .top{background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .top h1{font-size:19px;font-weight:900}
 .top small{opacity:.85;font-size:12px;display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
-.btn{padding:11px 18px;border-radius:12px;font-weight:800;font-size:15px;background:var(--brand);color:#fff;transition:filter .15s,transform .15s}
+.btn{padding:11px 18px;border-radius:12px;font-weight:800;font-size:15px;background:var(--brand);color:#fff;transition:filter .15s,transform .15s;display:inline-block;text-decoration:none;text-align:center}
 .btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.sec{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
 .btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6);padding:8px 14px;font-size:13px}
 .btn.danger{background:var(--bad)}
 .btn.small{padding:7px 12px;font-size:13px;border-radius:9px}
+.btn.big{font-size:18px;padding:14px 26px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .muted{color:var(--muted)}
 h2{font-size:22px;font-weight:900;color:var(--brand-dark);margin-bottom:10px}
 h3{font-size:16px;font-weight:800;margin-bottom:8px}
 label{font-weight:700;font-size:13px;display:block;margin:12px 0 5px}
 .hint{font-size:13px;color:var(--muted);margin-top:4px}
+.err{background:var(--bad-bg);color:var(--bad);padding:10px 12px;border-radius:10px;font-weight:700;font-size:14px;margin-top:12px}
 .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800}
 .pill.bad{background:var(--bad-bg);color:var(--bad)}
 .pill.warn{background:var(--warn-bg);color:var(--warn)}
 .pill.ok{background:var(--ok-bg);color:var(--ok)}
 .pill.info{background:var(--info-bg);color:var(--brand)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:900;letter-spacing:2px}
+.linkbox{display:flex;gap:8px;align-items:center;background:#F1F5F9;border-radius:10px;padding:8px 10px;word-break:break-all;font-size:14px}
+.linkbox span{flex:1}
+ol.steps{padding-left:22px;line-height:1.7}
 /* Alumnado */
 .kid{max-width:820px;margin:0 auto;padding:18px 16px 60px}
 .kid h2{font-size:26px;text-align:center;line-height:1.25}
 .q{font-size:24px;font-weight:900;text-align:center;color:var(--brand-dark);margin:8px 0 6px;line-height:1.3}
 .qsub{text-align:center;color:var(--muted);font-size:16px;margin-bottom:16px}
-.name{background:#fff;border:3px solid var(--line);border-radius:16px;padding:16px 10px;font-size:18px;font-weight:800;color:var(--ink);text-align:center;min-height:68px;transition:all .15s;position:relative}
+.name{background:#fff;border:3px solid var(--line);border-radius:16px;padding:16px 10px;font-size:20px;font-weight:900;color:var(--ink);text-align:center;min-height:68px;transition:all .15s;position:relative}
 .name:hover:not(:disabled){border-color:var(--brand);transform:translateY(-2px)}
 .name.sel{background:var(--info-bg);border-color:var(--brand);color:var(--brand-dark)}
 .name.sel::after{content:attr(data-n);position:absolute;top:-10px;right:-10px;background:var(--brand);color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;line-height:28px}
@@ -56,9 +64,9 @@ label{font-weight:700;font-size:13px;display:block;margin:12px 0 5px}
 .nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
 .nav .btn{font-size:18px;padding:14px 26px}
 .rk{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.rk .nm{flex:1 1 160px;font-weight:800;font-size:18px}
+.rk .nm{flex:1 1 120px;font-weight:900;font-size:20px}
 .faces{display:flex;gap:6px;flex-wrap:wrap}
-.face{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:6px 8px;min-width:64px;font-size:12px;font-weight:800;color:var(--muted);text-align:center}
+.face{background:#fff;border:2.5px solid var(--line);border-radius:12px;padding:6px 8px;min-width:60px;font-size:12px;font-weight:800;color:var(--muted);text-align:center}
 .face span{display:block;font-size:26px;line-height:1.1}
 .face.on{border-color:var(--brand);background:var(--info-bg);color:var(--brand-dark)}
 /* Resultados */
@@ -68,7 +76,7 @@ label{font-weight:700;font-size:13px;display:block;margin:12px 0 5px}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
 th,td{border:1px solid var(--line);padding:7px 8px;text-align:center}
-th{background:#F1F5F9;font-size:12px;font-weight:800;cursor:default}
+th{background:#F1F5F9;font-size:12px;font-weight:800}
 th.sort{cursor:pointer}
 th.sort:hover{background:#E2E8F0}
 td.l,th.l{text-align:left;white-space:nowrap}
@@ -86,31 +94,42 @@ th.vert{writing-mode:vertical-rl;transform:rotate(180deg);height:110px;white-spa
 .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
 .kpi b{font-size:28px;display:block;color:var(--brand-dark)}
 .kpi span{font-size:13px;color:var(--muted);font-weight:700}
-svg text{font-family:inherit}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:5px}
-.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
-.modal .card{max-width:380px;width:100%}
+.gcard{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer}
+.gcard:hover{border-color:var(--brand)}
+/* Fichas de códigos */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cut{border:2px dashed #94A3B8;border-radius:12px;padding:14px;text-align:center;break-inside:avoid}
+.cut b{font-size:22px;display:block}
+.cut .code{font-size:26px;color:var(--brand-dark);display:block;margin:6px 0}
+.cut small{font-size:11px;color:var(--muted);word-break:break-all}
+.loading{text-align:center;padding:60px 16px;color:var(--muted);font-weight:800}
+@media (max-width:600px){.cards{grid-template-columns:repeat(2,1fr)}.face{min-width:0;flex:1;padding:5px 2px;font-size:10px}.faces{flex-wrap:nowrap;width:100%;gap:4px}.face span{font-size:24px}}
 @media print{
   .no-print{display:none!important}
   body{background:#fff}
   .card{border:none;padding:0}
   .wrap{max-width:none;padding:0}
+  .cards{grid-template-columns:repeat(3,1fr)}
 }
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app"><div class="loading">Cargando...</div></div>
 
 <script>
 /* ==========================================================================
-   SOCIOGRAMA DE AULA
-   Todos os datos gárdanse SÓ neste navegador (localStorage). Non se envía
-   nada a ningún servidor. Para xuntar respostas de varios dispositivos,
-   úsase exportar/importar ficheiro JSON desde o panel do profesorado.
+   SOCIOGRAMA DE AULA (versión en liña)
+   - Orientación: entra coa conta de ControlAula, crea grupos e ve resultados.
+   - Titores: abren ?g=CÓDIGO e aplican o cuestionario (dispositivo compartido).
+   - Alumnado: abre a páxina e escribe o seu código persoal (dispositivo propio).
+   Os datos gárdanse en Supabase (táboas sg_*). Ver supabase/sociograma.sql
    ========================================================================== */
 
-const STORE_KEY = 'sociograma_aula_v1';
+const SUPABASE_URL = "https://gnzqvwmwvsfjjwvzqcjy.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImduenF2d213dnNmamp3dnpxY2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3Mjc5MjksImV4cCI6MjA5MTMwMzkyOX0.VVY85EnMX5rILMiPJcxhUI537ZFfT1ppu1zAhFGtqgE";
+const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 const MODELS = {
   A: {
@@ -172,157 +191,305 @@ const MODELS = {
 };
 
 /* ---------------- Estado ---------------- */
-let S = load();
-let V = { view: S.config ? 'home' : 'setup', kid:null, step:0, draft:null, tab:'resumo', sort:{k:'nome',d:1}, filtro:'E', modal:null, unlocked:false };
+// S: grupo cargado (resultados ou aplicación). Mesmo formato que a versión local.
+let S = { config:null, respostas:{} };
+// CTX: modo de acceso actual
+let CTX = { modo:null, grupoCod:null, alumnoCod:null, info:null, grupoId:null, grupoRow:null, codigos:null };
+let V = { view:'loading', kid:null, step:0, draft:null, tab:'aplicar', sort:{k:'nome',d:1}, filtro:'E', err:'', busy:false, grupos:[], user:null, edit:null };
 
-function blank(){ return { config:null, respostas:{} }; }
-function load(){
-  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && typeof s==='object') return Object.assign(blank(), s); } catch(e){}
-  return blank();
-}
-function save(){
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
-  catch(e){ alert('Non se puideron gardar os datos neste navegador. Exporta os datos para non perdelos.'); }
-}
 const M = () => MODELS[S.config.modelo];
 const al = () => S.config.alumnos;
 const byId = id => al().find(a => a.id === id);
 const nm = id => (byId(id)||{nome:'?'}).nome;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
-const curto = n => { const p = n.trim().split(/\s+/); return p.length>1 ? p[0]+' '+p[1][0]+'.' : p[0]; };
-const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase();
-const uid = () => Math.random().toString(36).slice(2,9);
+const curto = n => { const p = n.trim().split(/\s+/); return p.length>1 && n.length>8 ? p[0]+' '+p[1][0]+'.' : n; };
+const iniciais = n => { const t = n.trim(); if (t.replace(/[\s.]/g,'').length<=4) return t.replace(/[\s.]/g,''); return t.split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase(); };
+const BASE = location.origin + location.pathname;
+const ALFA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function code(n){ const a = new Uint32Array(n); crypto.getRandomValues(a); return [...a].map(x=>ALFA[x%ALFA.length]).join(''); }
+const pendKey = 'sociograma_pendentes_v2';
 
-/* ---------------- Render principal ---------------- */
+/* ---------------- Render ---------------- */
 function render(){
   const app = document.getElementById('app');
-  let h = '';
-  switch (V.view){
-    case 'setup':   h = viewSetup(); break;
-    case 'home':    h = viewHome(); break;
-    case 'kidpick': h = viewKidPick(); break;
-    case 'kid':     h = viewKid(); break;
-    case 'kidend':  h = viewKidEnd(); break;
-    case 'results': h = viewResults(); break;
-  }
-  if (V.modal) h += V.modal;
-  app.innerHTML = h;
+  const views = { loading:()=>'<div class="loading">Cargando...</div>', landing:viewLanding, login:viewLogin, panel:viewPanel,
+    edit:viewEdit, results:viewResults, tutor:viewTutor, kidpick:viewKidPick, kid:viewKid, kidend:viewKidEnd, codigos:viewCodigos, msg:viewMsg };
+  app.innerHTML = views[V.view]();
   if (V.view==='results' && V.tab==='grafo') drawGraph();
 }
-
-function topbar(sub, right=''){
-  return `<div class="top no-print"><div><h1>🕸️ Sociograma de aula</h1><small>${esc(sub)}</small></div><div class="row">${right}</div></div>`;
+function go(view){ V.view = view; V.err=''; window.scrollTo(0,0); render(); }
+function topbar(title, sub, right=''){
+  return `<div class="top no-print"><div><h1>${title}</h1><small>${esc(sub)}</small></div><div class="row">${right}</div></div>`;
 }
-
-/* ---------------- Configuración ---------------- */
-function viewSetup(){
-  const c = S.config || { grupo:'', modelo:'B', alumnos:[], pin:'' };
-  const hasResp = Object.keys(S.respostas).length>0;
-  return topbar('Configuración do grupo', S.config ? `<button class="btn ghost" onclick="go('home')">Volver</button>` : '') + `
-  <div class="wrap">
-    <div class="card">
-      <h2>Configurar o grupo</h2>
-      <p class="muted">Os datos quedan gardados <b>só neste dispositivo</b>. Non se envían a ningún servidor.</p>
-      <label>Nome do grupo</label>
-      <input id="f-grupo" name="sg-grupo" autocomplete="off" value="${esc(c.grupo)}" placeholder="Ex.: 4º EP A — curso 2026/27">
-      <label>Cuestionario</label>
-      <select id="f-modelo" ${hasResp?'disabled':''}>
-        ${Object.entries(MODELS).map(([k,m])=>`<option value="${k}" ${c.modelo===k?'selected':''}>${esc(m.nome)}</option>`).join('')}
-      </select>
-      ${hasResp?'<div class="hint">Non se pode cambiar o cuestionario porque xa hai respostas gardadas.</div>':''}
-      <label>Alumnado (un nome por liña)</label>
-      <textarea id="f-alumnos" rows="12" placeholder="Ana Pérez López&#10;Brais Castro Vila&#10;...">${esc(c.alumnos.map(a=>a.nome).join('\n'))}</textarea>
-      <div class="hint">Se xa hai respostas, mantéñense as dos nomes que non cambies.</div>
-      <label>PIN do profesorado (para ver resultados e saír do modo alumnado)</label>
-      <input id="f-pin" name="sg-pin" type="password" autocomplete="new-password" inputmode="numeric" value="${esc(c.pin)}" placeholder="Mínimo 4 díxitos">
-      <div class="row" style="margin-top:18px"><button class="btn" onclick="saveSetup()">Gardar</button></div>
-    </div>
-    ${!S.config ? `<div class="card"><h3>Xa tes datos doutro dispositivo?</h3>
-      <p class="muted" style="margin-bottom:10px">Podes importar un ficheiro exportado desde esta aplicación.</p>
-      <input type="file" accept=".json,application/json" onchange="importFile(this)"></div>` : ''}
-  </div>`;
-}
-
-function saveSetup(){
-  const grupo = document.getElementById('f-grupo').value.trim();
-  const modelo = document.getElementById('f-modelo').value;
-  const pin = document.getElementById('f-pin').value.trim();
-  const nomes = document.getElementById('f-alumnos').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  if (nomes.length < 4) return alert('Introduce polo menos 4 nomes.');
-  const dup = nomes.find((n,i)=>nomes.findIndex(m=>norm(m)===norm(n))!==i);
-  if (dup) return alert('Hai un nome repetido: '+dup+'. Engade un apelido para distinguilos.');
-  if (pin.length < 4) return alert('O PIN debe ter polo menos 4 caracteres.');
-  const prev = S.config ? S.config.alumnos : [];
-  const alumnos = nomes.map(n => prev.find(p=>norm(p.nome)===norm(n)) || { id:uid(), nome:n });
-  const ids = new Set(alumnos.map(a=>a.id));
-  // eliminar respostas de alumnado borrado e referencias a el
-  for (const k of Object.keys(S.respostas)) if (!ids.has(k)) delete S.respostas[k];
-  for (const r of Object.values(S.respostas)) cleanRefs(r, ids);
-  S.config = { grupo: grupo || 'Grupo sen nome', modelo, alumnos, pin };
-  save(); V.unlocked = true; go('home');
-}
-function cleanRefs(r, ids){
-  for (const k in r.nom) r.nom[k] = r.nom[k].filter(i=>ids.has(i));
-  for (const k in r.atr) if (r.atr[k] && !ids.has(r.atr[k])) r.atr[k] = null;
-  for (const k in r.rank) if (!ids.has(k)) delete r.rank[k];
-}
+function viewMsg(){ return topbar('🕸️ Sociograma de aula','') + `<div class="wrap narrow"><div class="card" style="text-align:center">${V.msg}</div></div>`; }
+function showMsg(html){ V.msg = html; go('msg'); }
 
 /* ---------------- Inicio ---------------- */
-function viewHome(){
-  const n = al().length, r = Object.keys(S.respostas).length;
-  return topbar(S.config.grupo) + `
-  <div class="wrap">
-    <div class="kpis">
-      <div class="kpi"><b>${n}</b><span>alumnos/as</span></div>
-      <div class="kpi"><b>${r}</b><span>cuestionarios respondidos</span></div>
-      <div class="kpi"><b>${n-r}</b><span>pendentes</span></div>
+async function boot(){
+  if (!sb){ showMsg('<h2>Non se puido cargar</h2><p class="muted">Comproba a conexión a internet e recarga a páxina.</p>'); return; }
+  const p = new URLSearchParams(location.search);
+  if (p.get('g')) return openTutor(p.get('g'));
+  if (p.get('c')) return openAlumno(p.get('c'));
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session){ V.user = session.user; return loadPanel(); }
+  go('landing');
+}
+
+function viewLanding(){
+  return topbar('🕸️ Sociograma de aula','') + `
+  <div class="wrap narrow">
+    <div class="card" style="text-align:center">
+      <div style="font-size:52px">🧒</div>
+      <h2>Son alumno ou alumna</h2>
+      <p class="muted" style="margin-bottom:14px">Escribe o código que che deu o teu titor ou titora</p>
+      <input id="c-in" class="code" style="text-align:center;font-size:26px;text-transform:uppercase" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="CÓDIGO"
+        onkeydown="if(event.key==='Enter')openAlumno(this.value)">
+      <button class="btn big" style="margin-top:14px;width:100%" onclick="openAlumno(document.getElementById('c-in').value)">Entrar</button>
+      ${V.err?`<div class="err">${esc(V.err)}</div>`:''}
     </div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-      <div class="card"><h3>🧒 Modo alumnado</h3>
-        <p class="muted" style="margin-bottom:14px">Cada neno ou nena toca o seu nome e responde ás preguntas. Ao rematar, volve á lista para o seguinte.</p>
-        <button class="btn" onclick="go('kidpick')">Comezar</button></div>
-      <div class="card"><h3>📊 Resultados</h3>
-        <p class="muted" style="margin-bottom:14px">Táboa sociométrica, atributos, popularidade, alertas e sociograma.</p>
-        <button class="btn" onclick="needPin(()=>{V.tab='resumo';go('results')})">Ver resultados</button></div>
-      <div class="card"><h3>⚙️ Grupo</h3>
-        <p class="muted" style="margin-bottom:14px">${esc(M().nome)}</p>
-        <button class="btn sec" onclick="needPin(()=>go('setup'))">Editar grupo</button></div>
-    </div>
+    <div class="card"><h3>👩‍🏫 Son titor ou titora</h3>
+      <p class="muted">Abre a ligazón que che enviou o Departamento de Orientación.</p></div>
+    <div class="card"><h3>🔐 Departamento de Orientación</h3>
+      <p class="muted" style="margin-bottom:12px">Acceso coa conta de ControlAula para crear grupos e ver resultados.</p>
+      <button class="btn sec" onclick="go('login')">Entrar</button></div>
   </div>`;
 }
 
-function needPin(fn){
-  if (V.unlocked) return fn();
-  window._pinCb = fn;
-  V.modal = `<div class="modal no-print"><div class="card"><h3>PIN do profesorado</h3>
-    <input id="pin-in" name="sg-pin-check" type="password" autocomplete="off" inputmode="numeric" autofocus onkeydown="if(event.key==='Enter')checkPin()">
-    <div class="row" style="margin-top:12px"><button class="btn" onclick="checkPin()">Entrar</button><button class="btn sec" onclick="V.modal=null;render()">Cancelar</button></div></div></div>`;
-  render(); setTimeout(()=>{const i=document.getElementById('pin-in'); if(i) i.focus();},50);
+/* ---------------- Login orientación ---------------- */
+function viewLogin(){
+  return topbar('🕸️ Sociograma de aula','Departamento de Orientación', `<button class="btn ghost" onclick="go('landing')">Volver</button>`) + `
+  <div class="wrap narrow"><div class="card">
+    <h2>Acceso de orientación</h2>
+    <p class="muted">Usa a túa conta de ControlAula.</p>
+    <form onsubmit="doLogin(event)">
+      <label>Correo</label><input id="l-mail" type="email" autocomplete="username" value="${esc(V.loginMail||'')}" required>
+      <label>Contrasinal</label><input id="l-pass" type="password" autocomplete="current-password" required>
+      <button class="btn" style="margin-top:16px;width:100%" ${V.busy?'disabled':''}>${V.busy?'Verificando...':'Entrar'}</button>
+    </form>
+    ${V.err?`<div class="err">${esc(V.err)}</div>`:''}
+  </div></div>`;
 }
-function checkPin(){
-  const v = document.getElementById('pin-in').value.trim();
-  if (v !== S.config.pin) { alert('PIN incorrecto'); return; }
-  V.modal = null; V.unlocked = true; const f = window._pinCb; window._pinCb = null; f && f();
+async function doLogin(e){
+  e.preventDefault();
+  const email = document.getElementById('l-mail').value.trim().toLowerCase(), password = document.getElementById('l-pass').value;
+  V.loginMail = email;
+  V.busy = true; V.err=''; render();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  V.busy = false;
+  if (error){ V.err = 'Correo ou contrasinal incorrectos.'; render(); return; }
+  V.user = data.user; loadPanel();
 }
-function go(view){ V.view = view; window.scrollTo(0,0); render(); }
-function lock(){ V.unlocked = false; }
+async function logout(){ try { await sb.auth.signOut(); } catch(e){} V.user=null; go('landing'); }
 
-/* ---------------- Modo alumnado ---------------- */
+/* ---------------- Panel de orientación ---------------- */
+async function loadPanel(){
+  V.view='loading'; render();
+  const { data, error } = await sb.from('sg_grupos').select('id,nome,modelo,codigo,activo,creado_en,sg_alumnos(count),sg_respostas(count)').order('creado_en',{ascending:false});
+  if (error){
+    if (/sg_grupos|relation|schema cache/i.test(error.message))
+      return showMsg(`<h2>Falta preparar a base de datos</h2><p class="muted">Hai que executar o ficheiro <b>supabase/sociograma.sql</b> no SQL Editor de Supabase.</p><p class="hint">${esc(error.message)}</p><button class="btn sec" style="margin-top:14px" onclick="logout()">Saír</button>`);
+    return showMsg(`<h2>Erro</h2><p class="muted">${esc(error.message)}</p><button class="btn sec" style="margin-top:14px" onclick="logout()">Saír</button>`);
+  }
+  V.grupos = data || []; go('panel');
+}
+function viewPanel(){
+  return topbar('🕸️ Sociograma de aula', 'Orientación · '+(V.user?.email||''), `<button class="btn ghost" onclick="logout()">Saír</button>`) + `
+  <div class="wrap">
+    <div class="row" style="justify-content:space-between;margin-bottom:14px">
+      <h2 style="margin:0">Os meus grupos</h2>
+      <div class="row"><label class="btn sec" style="margin:0">⬆ Importar ficheiro<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this,null)"></label>
+      <button class="btn" onclick="openEdit(null)">＋ Novo grupo</button></div>
+    </div>
+    ${V.grupos.length ? V.grupos.map(g=>{
+      const n = g.sg_alumnos?.[0]?.count||0, r = g.sg_respostas?.[0]?.count||0;
+      return `<div class="card gcard" onclick="openGrupo('${g.id}')"><div><h3 style="margin:0">${esc(g.nome)}</h3>
+        <div class="hint">${esc(MODELS[g.modelo].nome)} · código <span class="code">${g.codigo}</span></div></div>
+        <div class="row">${g.activo?'<span class="pill ok">Aberto</span>':'<span class="pill warn">Pechado</span>'}
+        <span class="pill info">${r}/${n} respostas</span></div></div>`; }).join('')
+    : `<div class="card"><p>Aínda non tes grupos. Preme <b>＋ Novo grupo</b> para crear o primeiro.</p></div>`}
+  </div>`;
+}
+
+/* ---------------- Crear / editar grupo ---------------- */
+function openEdit(g){
+  V.edit = g ? { id:CTX.grupoId, nome:S.config.grupo, modelo:S.config.modelo, nomes:al().map(a=>a.nome).join('\n'), hasResp:Object.keys(S.respostas).length>0 }
+             : { id:null, nome:'', modelo:'B', nomes:'', hasResp:false };
+  go('edit');
+}
+function viewEdit(){
+  const e = V.edit;
+  return topbar('🕸️ Sociograma de aula', e.id?'Editar grupo':'Novo grupo', `<button class="btn ghost" onclick="${e.id?`openGrupo('${e.id}')`:'loadPanel()'}">Cancelar</button>`) + `
+  <div class="wrap narrow"><div class="card">
+    <h2>${e.id?'Editar grupo':'Novo grupo'}</h2>
+    <label>Nome do grupo</label>
+    <input id="f-grupo" autocomplete="off" value="${esc(e.nome)}" placeholder="Ex.: 4º EP A">
+    <label>Cuestionario</label>
+    <select id="f-modelo" ${e.hasResp?'disabled':''}>${Object.entries(MODELS).map(([k,m])=>`<option value="${k}" ${e.modelo===k?'selected':''}>${esc(m.nome)}</option>`).join('')}</select>
+    ${e.hasResp?'<div class="hint">Non se pode cambiar porque xa hai respostas.</div>':''}
+    <label>Alumnado (un por liña)</label>
+    <textarea id="f-alumnos" rows="14" autocomplete="off" placeholder="AP&#10;BC&#10;CV&#10;...">${esc(e.nomes)}</textarea>
+    <div class="hint">Recomendado: <b>inicial do nome + inicial do primeiro apelido</b> (ex.: Ana Pérez → <b>AP</b>). Se se repiten, engade un número: AP1, AP2.
+    ${e.id?'<br>Se quitas un nome, bórranse tamén as súas respostas.':''}</div>
+    ${V.err?`<div class="err">${esc(V.err)}</div>`:''}
+    <div class="row" style="margin-top:18px"><button class="btn" ${V.busy?'disabled':''} onclick="saveEdit()">${V.busy?'Gardando...':'Gardar'}</button></div>
+  </div></div>`;
+}
+async function saveEdit(){
+  const e = V.edit;
+  const nome = document.getElementById('f-grupo').value.trim();
+  const modelo = document.getElementById('f-modelo').value;
+  const nomes = document.getElementById('f-alumnos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  Object.assign(e, { nome, modelo, nomes:nomes.join('\n') });
+  if (!nome){ V.err='Escribe o nome do grupo.'; return render(); }
+  if (nomes.length < 4){ V.err='Introduce polo menos 4 alumnos/as.'; return render(); }
+  const dups = [...new Set(nomes.filter((n,i)=>nomes.findIndex(m=>norm(m)===norm(n))!==i))];
+  if (dups.length){ V.err=`Hai iniciais repetidas: ${dups.join(', ')}. Engade un número para distinguilos (ex.: ${dups[0]}1, ${dups[0]}2).`; return render(); }
+  V.busy = true; V.err=''; render();
+  try {
+    if (!e.id){
+      const g = await createGroup(nome, modelo, nomes);
+      V.busy=false; return openGrupo(g.id, 'aplicar');
+    }
+    // edición
+    const prev = al();
+    const quitar = prev.filter(p=>!nomes.some(n=>norm(n)===norm(p.nome)));
+    const novos = nomes.filter(n=>!prev.some(p=>norm(p.nome)===norm(n)));
+    const conResp = quitar.filter(q=>S.respostas[q.id]);
+    if (quitar.length && !confirm(`Vas quitar: ${quitar.map(q=>q.nome).join(', ')}.` + (conResp.length?`\n${conResp.map(q=>q.nome).join(', ')} xa respondeu e borraranse esas respostas.`:'') + '\nContinuar?')){ V.busy=false; return render(); }
+    let r = await sb.from('sg_grupos').update({ nome, ...(e.hasResp?{}:{modelo}) }).eq('id', e.id); if (r.error) throw r.error;
+    if (quitar.length){ r = await sb.from('sg_alumnos').delete().in('id', quitar.map(q=>q.id)); if (r.error) throw r.error; }
+    if (novos.length){ await insertAlumnos(e.id, novos, prev.length); }
+    V.busy=false; openGrupo(e.id, 'aplicar');
+  } catch(err){ V.busy=false; V.err='Non se puido gardar: '+(err.message||err); render(); }
+}
+async function createGroup(nome, modelo, nomes){
+  let g, error;
+  for (let i=0;i<5;i++){
+    ({ data:g, error } = await sb.from('sg_grupos').insert({ nome, modelo, codigo:code(6) }).select().single());
+    if (!error) break; if (error.code!=='23505') throw error;
+  }
+  if (error) throw error;
+  await insertAlumnos(g.id, nomes, 0);
+  return g;
+}
+async function insertAlumnos(grupoId, nomes, offset){
+  for (let i=0;i<5;i++){
+    const rows = nomes.map((n,j)=>({ grupo_id:grupoId, nome:n, codigo:code(5), orde:offset+j }));
+    const { data, error } = await sb.from('sg_alumnos').insert(rows).select('id,nome');
+    if (!error) return data;
+    if (error.code!=='23505') throw error;
+  }
+  throw new Error('Non se puideron xerar códigos únicos. Téntao de novo.');
+}
+
+/* ---------------- Cargar un grupo (orientación) ---------------- */
+async function openGrupo(id, tab){
+  V.view='loading'; render();
+  const [g, a, r] = await Promise.all([
+    sb.from('sg_grupos').select('*').eq('id',id).single(),
+    sb.from('sg_alumnos').select('id,nome,codigo,orde').eq('grupo_id',id).order('orde').order('nome'),
+    sb.from('sg_respostas').select('alumno_id,datos,creado_en').eq('grupo_id',id)
+  ]);
+  const error = g.error||a.error||r.error;
+  if (error) return showMsg(`<h2>Erro</h2><p class="muted">${esc(error.message)}</p><button class="btn sec" style="margin-top:14px" onclick="loadPanel()">Volver</button>`);
+  CTX = { modo:'orientacion', grupoId:id, grupoRow:g.data, grupoCod:g.data.codigo, codigos:a.data.map(x=>({nome:x.nome,codigo:x.codigo})) };
+  S = { config:{ grupo:g.data.nome, modelo:g.data.modelo, alumnos:a.data.map(x=>({id:x.id,nome:x.nome})) }, respostas:{} };
+  r.data.forEach(x=>{ S.respostas[x.alumno_id] = Object.assign({}, x.datos, { data:x.creado_en }); });
+  if (tab) V.tab = tab;
+  V.filtro='E'; go('results');
+}
+
+/* ---------------- Titor/a: aplicación en dispositivo compartido ---------------- */
+async function openTutor(cod){
+  V.view='loading'; render();
+  const { data, error } = await sb.rpc('sg_info', { p_grupo:cod, p_alumno:null });
+  if (error) return showMsg(`<h2>Non se puido conectar</h2><p class="muted">${esc(error.message)}</p><button class="btn" style="margin-top:14px" onclick="location.reload()">Tentar de novo</button>`);
+  if (!data) return showMsg('<h2>Ligazón non válida</h2><p class="muted">Este código de grupo non existe. Revisa a ligazón que che enviaron.</p>');
+  if (data.pechado) return showMsg(`<h2>${esc(data.nome)}</h2><p class="muted">O cuestionario deste grupo está pechado. Fala co Departamento de Orientación.</p>`);
+  CTX = { modo:'titor', grupoCod:cod.toUpperCase(), info:data };
+  setInfo(data);
+  await flushPend();
+  go('tutor');
+}
+function setInfo(info){
+  S = { config:{ grupo:info.nome, modelo:info.modelo, alumnos:info.alumnos.map(a=>({id:a.id,nome:a.nome})) }, respostas:{} };
+  info.alumnos.forEach(a=>{ if (a.feito) S.respostas[a.id] = true; });
+}
+async function refreshTutor(){
+  const { data } = await sb.rpc('sg_info', { p_grupo:CTX.grupoCod, p_alumno:null });
+  if (data && !data.pechado){ CTX.info = data; setInfo(data); }
+}
+function viewTutor(){
+  const n = al().length, r = Object.keys(S.respostas).length;
+  const pend = getPend().length;
+  return topbar('🕸️ '+esc(S.config.grupo), 'Aplicación do sociograma') + `
+  <div class="wrap">
+    <div class="kpis">
+      <div class="kpi"><b>${r}/${n}</b><span>xa responderon</span></div>
+      <div class="kpi"><b>${n-r}</b><span>pendentes</span></div>
+    </div>
+    ${pend?`<div class="alert warn">Hai ${pend} cuestionario(s) gardado(s) neste dispositivo que aínda non se enviaron. <button class="btn small" onclick="flushPend().then(()=>refreshTutor()).then(render)">Enviar agora</button></div>`:''}
+    <div class="card"><h3>Opción 1 · Un dispositivo para toda a clase</h3>
+      <p class="muted" style="margin-bottom:12px">Cada alumno/a vén ao dispositivo, toca as súas iniciais e responde. Ao rematar, volve á lista para o seguinte.</p>
+      <button class="btn big" onclick="go('kidpick')">▶ Comezar</button></div>
+    <div class="card"><h3>Opción 2 · Cada alumno/a no seu dispositivo</h3>
+      <p class="muted" style="margin-bottom:12px">Imprime as fichas cos códigos persoais e repárteas. Cada alumno/a abre esta dirección e escribe o seu código:</p>
+      <div class="linkbox"><span>${esc(BASE)}</span></div>
+      <div class="row" style="margin-top:12px"><button class="btn sec" onclick="showCodigos()">🖨️ Ver e imprimir códigos</button>
+      <button class="btn sec small" onclick="refreshTutor().then(render)">↻ Actualizar</button></div></div>
+    <div class="card"><h3>Lembra</h3><ul class="muted" style="padding-left:20px;line-height:1.7">
+      <li>Explica que non hai respostas boas nin malas e que as respostas son <b>secretas</b>.</li>
+      <li>Que respondan en silencio e sen mirar a pantalla dos demais.</li>
+      <li>Ti non ves as respostas: envíanse directamente ao Departamento de Orientación.</li>
+      <li>Se alguén se equivoca e xa enviou, avisa a Orientación para que llo borre.</li></ul></div>
+  </div>`;
+}
+async function showCodigos(){
+  if (CTX.modo==='titor'){
+    const { data, error } = await sb.rpc('sg_codigos', { p_grupo:CTX.grupoCod });
+    if (error || !data) return alert('Non se puideron cargar os códigos.');
+    CTX.codigos = data;
+  }
+  go('codigos');
+}
+function viewCodigos(){
+  const back = CTX.modo==='titor' ? `go('tutor')` : `go('results')`;
+  return topbar('🕸️ '+esc(S.config.grupo), 'Códigos persoais', `<button class="btn ghost" onclick="window.print()">🖨️ Imprimir</button><button class="btn ghost" onclick="${back}">Volver</button>`) + `
+  <div class="wrap">
+    <p class="muted no-print" style="margin-bottom:12px">Recorta as fichas e dálle a cada alumno/a a súa. Cada código só serve unha vez.</p>
+    <div class="cards">${(CTX.codigos||[]).map(c=>`<div class="cut"><b>${esc(c.nome)}</b><span class="code">${esc(c.codigo)}</span>
+      <small>Entra en:<br>${esc(BASE)}</small></div>`).join('')}</div>
+  </div>`;
+}
+
+/* ---------------- Alumno/a con código persoal ---------------- */
+async function openAlumno(cod){
+  cod = String(cod||'').trim().toUpperCase();
+  if (!cod){ V.err='Escribe o teu código.'; return go('landing'); }
+  V.view='loading'; render();
+  const { data, error } = await sb.rpc('sg_info', { p_grupo:null, p_alumno:cod });
+  if (error){ V.view='landing'; V.err='Non se puido conectar. Comproba internet.'; return render(); }
+  if (!data){ V.view='landing'; V.err='Ese código non existe. Revísao.'; return render(); }
+  if (data.pechado) return showMsg('<div style="font-size:60px">🔒</div><h2>Cuestionario pechado</h2><p class="muted">Fala co teu titor ou titora.</p>');
+  if (data.eu.feito) return showMsg(`<div style="font-size:60px">✅</div><h2>Xa respondiches</h2><p class="muted">O cuestionario de <b>${esc(data.eu.nome)}</b> xa está enviado. Grazas!</p>`);
+  CTX = { modo:'alumno', alumnoCod:cod, info:data };
+  setInfo(data);
+  startKid(data.eu.id);
+}
+
+/* ---------------- Cuestionario (común) ---------------- */
 function viewKidPick(){
-  return topbar(S.config.grupo, `<button class="btn ghost" onclick="needPin(()=>go('home'))">🔒 Saír</button>`) + `
+  return topbar('🕸️ '+esc(S.config.grupo), 'Modo alumnado', `<button class="btn ghost" onclick="refreshTutor().then(()=>go('tutor'))">⬅ Titor/a</button>`) + `
   <div class="kid">
     <h2 style="margin:14px 0 6px">Ola! 👋 Quen es ti?</h2>
-    <p class="qsub">Toca o teu nome para comezar</p>
-    <div class="grid">
-      ${al().map(a=>{ const d = !!S.respostas[a.id];
-        return `<button class="name ${d?'done':''}" ${d?'disabled':''} onclick="startKid('${a.id}')">${esc(a.nome)}${d?' ✅':''}</button>`; }).join('')}
-    </div>
+    <p class="qsub">Toca as túas iniciais para comezar</p>
+    <div class="grid">${al().map(a=>{ const d = !!S.respostas[a.id];
+      return `<button class="name ${d?'done':''}" ${d?'disabled':''} onclick="startKid('${a.id}')">${esc(a.nome)}${d?' ✅':''}</button>`; }).join('')}</div>
   </div>`;
 }
 function startKid(id){
-  lock();
-  V.kid = id; V.step = 0;
+  V.kid = id; V.step = 0; V.err='';
   V.draft = { nom:{}, por:{}, atr:{}, rank:{} };
   M().nominacions.forEach(q=>{ V.draft.nom[q.k]=[]; V.draft.por[q.k]=''; });
   go('kid');
@@ -334,6 +501,10 @@ function steps(){
   s.push({t:'rank'});
   return s;
 }
+function exitKid(){
+  if (!confirm('Saír sen enviar? Perderanse as respostas.')) return;
+  if (CTX.modo==='titor') go('kidpick'); else { V.err=''; go('landing'); }
+}
 function viewKid(){
   const st = steps(), cur = st[V.step], m = M(), d = V.draft;
   const others = al().filter(a=>a.id!==V.kid);
@@ -341,10 +512,11 @@ function viewKid(){
   let body = '', canNext = true, nextTxt = 'Seguinte ➜';
 
   if (cur.t==='intro'){
-    body = `<h2 style="margin-top:20px">Ola, ${esc(nm(V.kid).split(' ')[0])}! 😊</h2>
+    body = `<h2 style="margin-top:20px">Ola, ${esc(nm(V.kid))}! 😊</h2>
       <p class="qsub" style="font-size:19px;margin-top:14px">Imos facer unhas preguntas sobre os teus compañeiros e compañeiras.<br>
       Non hai respostas boas nin malas. <b>Contesta con sinceridade.</b><br>
-      As túas respostas son <b>secretas</b>: só as ve o teu profesor ou profesora.</p>`;
+      As túas respostas son <b>secretas</b>.</p>
+      <p class="qsub">Os nomes aparecen coas iniciais (primeira letra do nome e do apelido).</p>`;
     nextTxt = 'Comezar ➜';
   }
   else if (cur.t==='nom'){
@@ -352,19 +524,19 @@ function viewKid(){
     const opp = m.nominacions.find(o=>o.ambito===q.ambito && o.tipo!==q.tipo);
     const blocked = new Set(opp ? d.nom[opp.k] : []);
     body = `<div class="q">${esc(q.txt)}</div>
-      <p class="qsub">Escolle ata 3 ${q.tipo==='E'?'💚':'—'} (${sel.length}/3)</p>
+      <p class="qsub">Escolle ata 3 (${sel.length}/3)</p>
       <div class="grid">${others.map(a=>{ const i = sel.indexOf(a.id);
         return `<button class="name ${i>=0?'sel':''}" data-n="${i+1}" ${blocked.has(a.id)?'disabled title="Xa o/a escolliches na outra pregunta"':''} onclick="toggleNom('${q.k}','${a.id}')">${esc(a.nome)}</button>`; }).join('')}</div>
       ${sel.length ? `<label style="font-size:17px;margin-top:20px">${esc(q.por)}</label>
-      <textarea rows="3" style="font-size:17px" placeholder="Escribe aquí (se queres)" oninput="V.draft.por['${q.k}']=this.value">${esc(d.por[q.k])}</textarea>` : ''}`;
+      <textarea rows="3" style="font-size:17px" autocomplete="off" placeholder="Escribe aquí (se queres)" oninput="V.draft.por['${q.k}']=this.value">${esc(d.por[q.k])}</textarea>` : ''}`;
   }
   else if (cur.t==='atr'){
     const a = cur.a, v = d.atr[a.k];
     body = `<div class="qsub" style="margin:4px 0">Quen da túa clase destaca por...</div>
       <div class="q" style="font-size:27px">${esc(a.txt)}?</div>
-      <p class="qsub">Toca un nome (pregunta ${cur.i+1} de ${m.atributos.length})</p>
+      <p class="qsub">Toca unhas iniciais (pregunta ${cur.i+1} de ${m.atributos.length})</p>
       <div class="grid">${others.map(o=>`<button class="name ${v===o.id?'sel':''}" data-n="✓" onclick="pickAtr('${a.k}','${o.id}')">${esc(o.nome)}</button>`).join('')}
-      <button class="name ${v===null?'sel':''}" data-n="✓" style="border-style:dashed" onclick="pickAtr('${a.k}',null)">🤷 Ninguén / Non sei</button></div>`;
+      <button class="name ${v===null?'sel':''}" data-n="✓" style="border-style:dashed;font-size:16px" onclick="pickAtr('${a.k}',null)">🤷 Ninguén / Non sei</button></div>`;
     canNext = a.k in d.atr;
   }
   else if (cur.t==='rank'){
@@ -373,46 +545,85 @@ function viewKid(){
       <p class="qsub">Toca unha cara para cada compañeiro ou compañeira (${done}/${others.length})</p>
       <div class="card" style="padding:8px 14px">${others.map(o=>`<div class="rk"><div class="nm">${esc(o.nome)}</div><div class="faces">
         ${m.escala.map(e=>`<button class="face ${d.rank[o.id]===e.v?'on':''}" onclick="setRank('${o.id}',${e.v})"><span>${e.e}</span>${e.t}</button>`).join('')}
-      </div></div>`).join('')}</div>`;
-    nextTxt = 'Rematar ✔';
+      </div></div>`).join('')}</div>
+      ${V.err?`<div class="err">${esc(V.err)}</div>`:''}`;
+    nextTxt = V.busy ? 'Enviando...' : 'Enviar ✔';
+    canNext = !V.busy;
   }
 
   return `<div class="top no-print"><div><h1>${esc(nm(V.kid))}</h1><small>${esc(S.config.grupo)}</small></div>
-    <button class="btn ghost" onclick="if(confirm('Saír sen gardar?'))go('kidpick')">✕ Saír</button></div>
+    <button class="btn ghost" onclick="exitKid()">✕ Saír</button></div>
   <div class="kid"><div class="prog"><div style="width:${pct}%"></div></div>${body}
     <div class="nav">
       <button class="btn sec" ${V.step===0?'style="visibility:hidden"':''} onclick="V.step--;go('kid')">⬅ Atrás</button>
       <button class="btn" ${canNext?'':'disabled'} onclick="nextStep()">${nextTxt}</button>
     </div></div>`;
 }
+function keepScroll(){ const y = window.scrollY; render(); window.scrollTo(0,y); }
 function toggleNom(k,id){
   const a = V.draft.nom[k], i = a.indexOf(id);
   if (i>=0) a.splice(i,1); else if (a.length<3) a.push(id);
-  const y = window.scrollY; render(); window.scrollTo(0,y);
+  keepScroll();
 }
 function pickAtr(k,id){
   V.draft.atr[k] = id; render();
   const at = V.step;
   setTimeout(()=>{ if (V.view==='kid' && V.step===at) nextStep(); }, 280);
 }
-function setRank(id,v){ V.draft.rank[id] = v; const y = window.scrollY; render(); window.scrollTo(0,y); }
+function setRank(id,v){ V.draft.rank[id] = v; keepScroll(); }
 function nextStep(){
   const st = steps(), cur = st[V.step];
   if (cur.t==='nom' && V.draft.nom[cur.q.k].length===0 &&
       !confirm('Non escolliches a ninguén. Queres seguir igualmente?')) return;
   if (cur.t==='rank'){
     const others = al().filter(a=>a.id!==V.kid), falta = others.filter(o=>!V.draft.rank[o.id]).length;
-    if (falta && !confirm(`Faltan ${falta} compañeiros/as por valorar. Rematar igualmente?`)) return;
-    S.respostas[V.kid] = Object.assign({ data:new Date().toISOString() }, V.draft);
-    save(); V.draft = null; go('kidend'); return;
+    if (falta && !confirm(`Faltan ${falta} compañeiros/as por valorar. Enviar igualmente?`)) return;
+    return enviar();
   }
   V.step++; go('kid');
 }
+async function enviar(){
+  const item = { grupo:CTX.grupoCod||null, alumno:V.kid, codigo:CTX.alumnoCod||null, datos:V.draft };
+  V.busy = true; V.err=''; keepScroll();
+  const res = await sendOne(item);
+  V.busy = false;
+  if (res==='ok' || res==='xa'){
+    if (CTX.modo==='titor') S.respostas[V.kid] = true;
+    V.draft = null; V.endMsg = res==='xa' ? 'Este cuestionario xa estaba enviado.' : ''; go('kidend'); return;
+  }
+  if (res==='pechado'){ V.err='O cuestionario está pechado. Fala co titor/a.'; return keepScroll(); }
+  // erro de rede: gardar no dispositivo para enviar despois
+  addPend(item);
+  if (CTX.modo==='titor'){ S.respostas[V.kid] = true; V.draft=null; V.endMsg='Non había conexión: gardouse neste dispositivo e enviarase máis tarde.'; go('kidend'); }
+  else { V.err='Non se puido enviar. Comproba a conexión e preme "Enviar" outra vez.'; keepScroll(); }
+}
+async function sendOne(it){
+  try {
+    const { error } = await sb.rpc('sg_enviar', { p_grupo:it.grupo, p_alumno_id:it.alumno, p_codigo_alumno:it.codigo, p_datos:it.datos });
+    if (!error) return 'ok';
+    if (/xa_respondido/.test(error.message)) return 'xa';
+    if (/pechado/.test(error.message)) return 'pechado';
+    if (/non_atopado|datos_invalidos/.test(error.message)) return 'invalido';
+    return 'rede';
+  } catch(e){ return 'rede'; }
+}
+function getPend(){ try { return JSON.parse(localStorage.getItem(pendKey))||[]; } catch(e){ return []; } }
+function setPend(a){ try { localStorage.setItem(pendKey, JSON.stringify(a)); } catch(e){} }
+function addPend(it){ const a = getPend().filter(x=>!(x.alumno===it.alumno)); a.push(it); setPend(a); }
+async function flushPend(){
+  const left = [];
+  for (const it of getPend()){ const r = await sendOne(it); if (r==='rede') left.push(it); }
+  setPend(left);
+}
 function viewKidEnd(){
+  const nextBtn = CTX.modo==='titor'
+    ? `<button class="btn big" style="margin-top:20px" onclick="refreshTutor().then(()=>go('kidpick'))">Seguinte compañeiro/a ➜</button>`
+    : `<p class="qsub" style="margin-top:20px">Xa podes pechar esta páxina.</p>`;
   return `<div class="kid" style="text-align:center;padding-top:80px">
     <div style="font-size:80px">🎉</div><h2>Moitas grazas!</h2>
-    <p class="qsub" style="font-size:19px">Xa remataches. Avisa ao teu profe.</p>
-    <button class="btn" style="font-size:18px;padding:14px 28px;margin-top:20px" onclick="go('kidpick')">Seguinte compañeiro/a ➜</button></div>`;
+    <p class="qsub" style="font-size:19px">Xa remataches.</p>
+    ${V.endMsg?`<p class="hint">${esc(V.endMsg)}</p>`:''}
+    ${nextBtn}</div>`;
 }
 
 /* ---------------- Cálculos ---------------- */
@@ -420,24 +631,24 @@ function calc(){
   const m = M(), A = al(), R = S.respostas;
   const respIds = Object.keys(R).filter(id=>byId(id));
   const rows = A.map(a=>({ id:a.id, nome:a.nome, resp:!!R[a.id], E:{}, Rj:{}, tE:0, tR:0, pref:0,
-    pos:0, neg:0, atr:{}, rSum:0, rN:0, pop:null, rejecters:new Set(), choosers:new Set(), mutE:[], mutR:[], flags:[] }));
-  const row = id => rows.find(r=>r.id===id);
+    pos:0, neg:0, atr:{}, rSum:0, rN:0, pop:null, rejecters:new Set(), mutE:[], mutR:[], flags:[] }));
+  const rowMap = new Map(rows.map(r=>[r.id,r]));
   rows.forEach(r=>{ m.nominacions.forEach(q=>{ (q.tipo==='E'?r.E:r.Rj)[q.k]=0; }); m.atributos.forEach(x=>r.atr[x.k]=0); });
 
   for (const from of respIds){
     const r = R[from];
     m.nominacions.forEach(q=>{
-      (r.nom[q.k]||[]).forEach(to=>{ const t=row(to); if(!t) return;
-        if (q.tipo==='E'){ t.E[q.k]++; t.tE++; t.choosers.add(from); }
+      (r.nom?.[q.k]||[]).forEach(to=>{ const t=rowMap.get(to); if(!t||to===from) return;
+        if (q.tipo==='E'){ t.E[q.k]++; t.tE++; }
         else { t.Rj[q.k]++; t.tR++; t.rejecters.add(from); }
       });
     });
-    m.atributos.forEach(x=>{ const t = r.atr && r.atr[x.k] && row(r.atr[x.k]); if(!t) return;
+    m.atributos.forEach(x=>{ const t = r.atr && r.atr[x.k] && rowMap.get(r.atr[x.k]); if(!t) return;
       t.atr[x.k]++; if (x.s>0) t.pos++; else t.neg++; });
-    for (const [to,v] of Object.entries(r.rank||{})){ const t=row(to); if(t){ t.rSum+=v; t.rN++; } }
+    for (const [to,v] of Object.entries(r.rank||{})){ const t=rowMap.get(to); if(t && to!==from){ t.rSum+=v; t.rN++; } }
   }
   const chose = (a,b,tipo) => { const r=R[a]; if(!r) return false;
-    return m.nominacions.some(q=>q.tipo===tipo && (r.nom[q.k]||[]).includes(b)); };
+    return m.nominacions.some(q=>q.tipo===tipo && (r.nom?.[q.k]||[]).includes(b)); };
   rows.forEach(r=>{
     r.pref = r.tE - r.tR;
     r.pop = r.rN ? r.rSum/r.rN : null;
@@ -445,12 +656,11 @@ function calc(){
       if (chose(r.id,o.id,'E') && chose(o.id,r.id,'E')) r.mutE.push(o.id);
       if (chose(r.id,o.id,'R') && chose(o.id,r.id,'R')) r.mutR.push(o.id); });
     const others = respIds.filter(i=>i!==r.id).length;
-    const umbral = others/3;
-    const byCount = r.rejecters.size > umbral && r.rejecters.size>0;
-    const byRank = r.pop!==null && r.pop >= m.corteRanking;
-    r.umbral = umbral; r.byCount = byCount; r.byRank = byRank;
-    if (byCount && byRank) r.flags.push({c:'bad', t:'Rexeitado/a'});
-    else if (byCount || byRank) r.flags.push({c:'warn', t:'Posible rexeitamento'});
+    r.umbral = others/3;
+    r.byCount = r.rejecters.size>0 && r.rejecters.size > r.umbral;
+    r.byRank = r.pop!==null && r.pop >= m.corteRanking;
+    if (r.byCount && r.byRank) r.flags.push({c:'bad', t:'Rexeitado/a'});
+    else if (r.byCount || r.byRank) r.flags.push({c:'warn', t:'Posible rexeitamento'});
     if (respIds.length && r.tE===0) r.flags.push({c:'bad', t:'Illado/a (0 eleccións)'});
     if (r.neg>=3 && r.neg>r.pos) r.flags.push({c:'warn', t:'Predominan atributos negativos'});
     if (r.mutE.length===0 && r.tE>0) r.flags.push({c:'info', t:'Sen eleccións recíprocas'});
@@ -458,16 +668,16 @@ function calc(){
   return { rows, respIds, m };
 }
 
-/* ---------------- Resultados ---------------- */
-const TABS = [['resumo','Resumo e alertas'],['taboa','Táboa sociométrica'],['atributos','Atributos (P5)'],['popularidade','Popularidade (P6)'],['matriz','Matriz'],['grafo','Sociograma'],['motivos','Motivos'],['datos','Datos']];
+/* ---------------- Resultados (orientación) ---------------- */
+const TABS = [['aplicar','Aplicación'],['resumo','Resumo e alertas'],['taboa','Táboa sociométrica'],['atributos','Atributos (P5)'],['popularidade','Popularidade (P6)'],['matriz','Matriz'],['grafo','Sociograma'],['motivos','Motivos'],['datos','Datos']];
 
 function viewResults(){
   const C = calc();
-  let body = '';
-  if (!C.respIds.length && V.tab!=='datos') body = `<div class="card"><p>Aínda non hai respostas. Usa o <b>modo alumnado</b> para que o grupo responda.</p></div>`;
-  else body = ({resumo:tResumo, taboa:tTaboa, atributos:tAtributos, popularidade:tPop, matriz:tMatriz, grafo:tGrafo, motivos:tMotivos, datos:tDatos})[V.tab](C);
-  return topbar(S.config.grupo+' · '+C.respIds.length+'/'+al().length+' respostas',
-    `<button class="btn ghost" onclick="window.print()">🖨️ Imprimir</button><button class="btn ghost" onclick="lock();go('home')">🔒 Pechar</button>`) + `
+  let body;
+  if (!C.respIds.length && !['aplicar','datos'].includes(V.tab)) body = `<div class="card"><p>Aínda non hai respostas. Mira a pestana <b>Aplicación</b> para enviarlle a ligazón ao titor/a.</p></div>`;
+  else body = ({aplicar:tAplicar, resumo:tResumo, taboa:tTaboa, atributos:tAtributos, popularidade:tPop, matriz:tMatriz, grafo:tGrafo, motivos:tMotivos, datos:tDatos})[V.tab](C);
+  return topbar('🕸️ '+esc(S.config.grupo), C.respIds.length+'/'+al().length+' respostas · '+M().nome,
+    `<button class="btn ghost" onclick="openGrupo('${CTX.grupoId}')">↻ Actualizar</button><button class="btn ghost" onclick="window.print()">🖨️ Imprimir</button><button class="btn ghost" onclick="loadPanel()">⬅ Grupos</button>`) + `
   <div class="wrap">
     <div class="tabs no-print">${TABS.map(([k,t])=>`<button class="tab ${V.tab===k?'on':''}" onclick="V.tab='${k}';V.filtro='E';render()">${t}</button>`).join('')}</div>
     ${body}
@@ -475,9 +685,53 @@ function viewResults(){
 }
 const fmt = x => x===null ? '—' : x.toFixed(2).replace('.',',');
 const pills = r => r.flags.map(f=>`<span class="pill ${f.c}">${esc(f.t)}</span>`).join(' ');
+async function copy(txt, btn){
+  try { await navigator.clipboard.writeText(txt); }
+  catch(e){ const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  if (btn){ const o = btn.textContent; btn.textContent='✔ Copiado'; setTimeout(()=>btn.textContent=o, 1500); }
+}
+function tutorText(){
+  const link = BASE+'?g='+CTX.grupoCod;
+  return `Ola! Para aplicar o sociograma de ${S.config.grupo}:
+
+1. Abre esta ligazón (móbil, tableta ou ordenador): ${link}
+2. Opción A (un só dispositivo): preme "Comezar". Cada alumno/a toca as súas iniciais e responde. Ao rematar, volve á lista para o seguinte.
+   Opción B (cada un no seu dispositivo): preme "Ver e imprimir códigos", reparte as fichas e que cada alumno/a entre en ${BASE} co seu código.
+3. Ti non ves as respostas; chegan directamente a Orientación.
+4. Antes de empezar, explica que non hai respostas boas nin malas e que son secretas.
+
+Calquera dúbida, avísame. Grazas!`;
+}
+function tAplicar(){
+  const g = CTX.grupoRow, link = BASE+'?g='+CTX.grupoCod;
+  const n = al().length, r = Object.keys(S.respostas).length;
+  return `
+  <div class="kpis"><div class="kpi"><b>${r}/${n}</b><span>respostas</span></div>
+    <div class="kpi"><b>${g.activo?'Aberto':'Pechado'}</b><span>estado do cuestionario</span></div></div>
+  <div class="card"><h3>1 · Envía esta ligazón ao titor/a</h3>
+    <div class="linkbox"><span>${esc(link)}</span><button class="btn small" onclick="copy('${esc(link)}',this)">Copiar</button></div>
+    <p class="hint">Con esta ligazón pode aplicar o cuestionario desde calquera dispositivo, pero <b>non pode ver resultados</b>.</p>
+    <label>Mensaxe para o titor/a (lista para pegar nun correo ou mensaxe)</label>
+    <textarea rows="10" readonly style="font-size:14px">${esc(tutorText())}</textarea>
+    <button class="btn sec small" style="margin-top:8px" onclick="copy(tutorText(),this)">Copiar mensaxe</button></div>
+  <div class="card"><h3>2 · Códigos persoais (se responden cada un no seu dispositivo)</h3>
+    <p class="muted" style="margin-bottom:12px">O titor/a tamén pode imprimilos desde a súa ligazón.</p>
+    <button class="btn sec" onclick="showCodigos()">🖨️ Ver e imprimir códigos</button></div>
+  <div class="card"><h3>3 · Abrir ou pechar</h3>
+    <p class="muted" style="margin-bottom:12px">Cando rematen, pecha o cuestionario: a ligazón e os códigos deixarán de funcionar.</p>
+    <button class="btn ${g.activo?'danger':''}" onclick="toggleActivo()">${g.activo?'🔒 Pechar cuestionario':'🔓 Volver abrir'}</button></div>
+  <div class="card"><h3>Alumnado</h3>
+    <div class="row">${al().map(a=>`<span class="pill ${S.respostas[a.id]?'ok':'warn'}">${esc(a.nome)} ${S.respostas[a.id]?'✔':'…'}</span>`).join('')}</div>
+    <button class="btn sec small" style="margin-top:12px" onclick="openEdit(true)">✏️ Editar grupo</button></div>`;
+}
+async function toggleActivo(){
+  const { error } = await sb.from('sg_grupos').update({ activo:!CTX.grupoRow.activo }).eq('id', CTX.grupoId);
+  if (error) return alert('Erro: '+error.message);
+  openGrupo(CTX.grupoId);
+}
 
 function tResumo(C){
-  const {rows, respIds, m} = C;
+  const {rows, m} = C;
   const resp = rows.filter(r=>r.resp).length;
   const maxE = [...rows].sort((a,b)=>b.tE-a.tE)[0];
   const graves = rows.filter(r=>r.flags.some(f=>f.c==='bad'));
@@ -492,7 +746,7 @@ function tResumo(C){
     <div class="kpi"><b>${resp}/${rows.length}</b><span>respostas</span></div>
     <div class="kpi"><b>${mutuas}</b><span>parellas de eleccións recíprocas</span></div>
     <div class="kpi"><b>${fmt(popAvg)}</b><span>popularidade media do grupo (1 = mellor)</span></div>
-    <div class="kpi"><b>${esc(maxE?curto(maxE.nome):'—')}</b><span>máis elixido/a (${maxE?maxE.tE:0})</span></div>
+    <div class="kpi"><b>${esc(maxE?maxE.nome:'—')}</b><span>máis elixido/a (${maxE?maxE.tE:0})</span></div>
   </div>
   ${pend.length?`<div class="alert info">Faltan por responder: ${pend.map(r=>esc(r.nome)).join(', ')}. Os índices calcúlanse coas respostas dispoñibles.</div>`:''}
   <div class="card"><h3>🚨 Situacións que requiren atención (${graves.length})</h3>
@@ -521,7 +775,7 @@ function tTaboa(C){
   const {rows, m} = C;
   rows.forEach(r=>{ m.nominacions.forEach(q=>{ r['q_'+q.k] = q.tipo==='E'?r.E[q.k]:r.Rj[q.k]; }); r.nMut=r.mutE.length; });
   const qs = m.nominacions;
-  return `<div class="card"><h3>Táboa sociométrica (preguntas ${qs.map((_,i)=>i+1).join(', ')})</h3>
+  return `<div class="card"><h3>Táboa sociométrica</h3>
   <p class="hint" style="margin-bottom:10px">Preme nunha cabeceira para ordenar.</p>
   <div class="tbl"><table><thead><tr>${th('nome','Alumno/a')}
     ${qs.filter(q=>q.tipo==='E').map(q=>th('q_'+q.k,q.curto)).join('')}${th('tE','TOTAL ELECCIÓNS')}
@@ -557,7 +811,7 @@ function tPop(C){
   <div class="tbl"><table><thead><tr>${th('nome','Alumno/a')}${th('pop','Popularidade')}<th>Valoracións</th>
     ${m.escala.map(e=>`<th>${e.e} ${e.t}</th>`).join('')}<th style="min-width:180px">Gráfico</th></tr></thead><tbody>
   ${sortRows(rows).map(r=>{
-    const dist = m.escala.map(e=>Object.values(S.respostas).filter(x=>x.rank && x.rank[r.id]===e.v).length);
+    const dist = m.escala.map(e=>Object.entries(S.respostas).filter(([from,x])=>from!==r.id && x.rank && x.rank[r.id]===e.v).length);
     const w = r.pop===null?0:((r.pop-1)/(max-1))*100;
     const col = r.pop===null?'#CBD5E1': r.pop>=m.corteRanking?'var(--bad)': r.pop>=(max+1)/2?'var(--warn)':'var(--ok)';
     return `<tr><td class="l">${esc(r.nome)}</td><td><b>${fmt(r.pop)}</b></td><td>${r.rN}</td>
@@ -567,12 +821,12 @@ function tPop(C){
   </tbody></table></div></div>`;
 }
 
-function tMatriz(C){
+function tMatriz(){
   const m = M(), A = al();
   const qsel = V.filtro;
   const opts = [['E','Todas as eleccións'],['R','Todos os rexeitamentos'],['ER','Eleccións e rexeitamentos'],...m.nominacions.map(q=>[q.k,q.curto])];
   const has = (from,to,tipo) => { const r=S.respostas[from]; if(!r) return false;
-    return m.nominacions.some(q=>(tipo? q.tipo===tipo : q.k===qsel) && (r.nom[q.k]||[]).includes(to)); };
+    return m.nominacions.some(q=>(tipo? q.tipo===tipo : q.k===qsel) && (r.nom?.[q.k]||[]).includes(to)); };
   const cell = (f,t) => {
     if (f===t) return `<td class="mx self"></td>`;
     const qi = m.nominacions.find(q=>q.k===qsel);
@@ -588,12 +842,12 @@ function tMatriz(C){
   <div class="row no-print" style="margin:10px 0"><select style="max-width:300px" onchange="V.filtro=this.value;render()">
     ${opts.map(([k,t])=>`<option value="${k}" ${qsel===k?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
   <div class="tbl"><table style="width:auto"><thead><tr><th class="l">Escolle ↓ / Escollido/a →</th>
-    ${A.map(a=>`<th class="vert">${esc(curto(a.nome))}</th>`).join('')}</tr></thead><tbody>
+    ${A.map(a=>`<th class="vert">${esc(a.nome)}</th>`).join('')}</tr></thead><tbody>
     ${A.map(f=>`<tr><td class="l">${esc(f.nome)}${S.respostas[f.id]?'':' <span class="muted">(sen resposta)</span>'}</td>${A.map(t=>cell(f.id,t.id)).join('')}</tr>`).join('')}
   </tbody></table></div></div>`;
 }
 
-function tGrafo(C){
+function tGrafo(){
   const m = M();
   const opts = [['E','Eleccións (todas)'],['R','Rexeitamentos (todos)'],['M','Só eleccións recíprocas'],...m.nominacions.map(q=>[q.k,q.curto])];
   return `<div class="card"><h3>Sociograma (diana)</h3>
@@ -609,7 +863,6 @@ function drawGraph(){
   const {rows, m} = calc(), R = S.respostas, f = V.filtro;
   const W = 760, c = W/2, n = rows.length;
   const maxE = Math.max(1, ...rows.map(r=>r.tE));
-  // ordenar por eleccións para colocar no círculo, alternando para repartir
   const order = [...rows].sort((a,b)=>a.nome.localeCompare(b.nome,'gl'));
   const pos = {};
   order.forEach((r,i)=>{
@@ -621,8 +874,8 @@ function drawGraph(){
   const sel = (q) => f==='E'||f==='M' ? q.tipo==='E' : f==='R' ? q.tipo==='R' : q.k===f;
   const seen = new Set();
   for (const [from, r] of Object.entries(R)){
-    m.nominacions.filter(sel).forEach(q=>(r.nom[q.k]||[]).forEach(to=>{
-      if (!pos[from]||!pos[to]) return;
+    m.nominacions.filter(sel).forEach(q=>(r.nom?.[q.k]||[]).forEach(to=>{
+      if (!pos[from]||!pos[to]||from===to) return;
       const key = from+'>'+to; if (seen.has(key)) return; seen.add(key);
       edges.push({from,to,tipo:q.tipo});
     }));
@@ -647,22 +900,20 @@ function drawGraph(){
   rows.forEach(r=>{
     const p = pos[r.id];
     const col = !r.resp ? '#CBD5E1' : r.flags.some(x=>x.c==='bad') ? '#EF4444' : r.flags.some(x=>x.c==='warn') ? '#F59E0B' : '#22C55E';
-    const fill = r.resp ? col : '#F1F5F9';
     svg += `<g><title>${esc(r.nome)} — E:${r.tE} R:${r.tR} PS:${r.pref}</title>
-      <circle cx="${p.x}" cy="${p.y}" r="18" fill="${fill}" stroke="${col}" stroke-width="3"/>
+      <circle cx="${p.x}" cy="${p.y}" r="18" fill="${r.resp?col:'#F1F5F9'}" stroke="${col}" stroke-width="3"/>
       <text x="${p.x}" y="${p.y+4.5}" text-anchor="middle" font-size="12" font-weight="800" fill="${r.resp?'#fff':'#475569'}">${esc(iniciais(r.nome))}</text>
-      <text x="${p.x}" y="${p.y+33}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(curto(r.nome))}</text></g>`;
+      ${iniciais(r.nome)!==r.nome?`<text x="${p.x}" y="${p.y+33}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(curto(r.nome))}</text>`:''}</g>`;
   });
-  svg += '</svg>';
-  el.innerHTML = svg;
+  el.innerHTML = svg + '</svg>';
 }
 
-function tMotivos(C){
+function tMotivos(){
   const m = M(), R = S.respostas;
   const list = al().map(a=>{
     const items = [];
     for (const [from, r] of Object.entries(R)) m.nominacions.forEach(q=>{
-      if ((r.nom[q.k]||[]).includes(a.id) && r.por && r.por[q.k] && r.por[q.k].trim())
+      if ((r.nom?.[q.k]||[]).includes(a.id) && r.por && r.por[q.k] && r.por[q.k].trim())
         items.push({q, from, txt:r.por[q.k].trim()});
     });
     return {a, items};
@@ -674,7 +925,7 @@ function tMotivos(C){
   : '<p class="muted">Non hai motivos escritos.</p>'}</div>`;
 }
 
-function tDatos(C){
+function tDatos(){
   return `<div class="card"><h3>Respostas recibidas</h3>
   <div class="tbl"><table><thead><tr><th class="l">Alumno/a</th><th>Estado</th><th>Data</th><th class="no-print"></th></tr></thead><tbody>
   ${al().map(a=>{ const r=S.respostas[a.id];
@@ -682,17 +933,30 @@ function tDatos(C){
     <td>${r&&r.data?new Date(r.data).toLocaleString('gl-ES'):''}</td>
     <td class="no-print">${r?`<button class="btn danger small" onclick="delResp('${a.id}')">Borrar para repetir</button>`:''}</td></tr>`; }).join('')}
   </tbody></table></div></div>
-  <div class="card no-print"><h3>Copia de seguridade e varios dispositivos</h3>
-    <p class="muted" style="margin-bottom:12px">Se o alumnado responde en varias tabletas, exporta os datos de cada unha e impórtaos aquí: as respostas xúntanse automaticamente (por nome).</p>
-    <div class="row"><button class="btn" onclick="exportJSON()">⬇ Exportar datos (JSON)</button>
-    <button class="btn sec" onclick="exportCSV()">⬇ Táboa resumo (CSV)</button>
-    <label class="btn sec" style="margin:0;font-size:15px">⬆ Importar e xuntar<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this)"></label></div></div>
-  <div class="card no-print"><h3>Borrar todo</h3>
-    <p class="muted" style="margin-bottom:12px">Elimina o grupo e todas as respostas deste dispositivo. Exporta antes se queres conservalos.</p>
-    <button class="btn danger" onclick="wipe()">Borrar todos os datos</button></div>`;
+  <div class="card no-print"><h3>Descargar</h3>
+    <p class="muted" style="margin-bottom:12px">Os datos están gardados en liña. Podes descargar unha copia cando queiras.</p>
+    <div class="row"><button class="btn" onclick="exportJSON()">⬇ Copia completa (JSON)</button>
+    <button class="btn sec" onclick="exportCSV()">⬇ Táboa resumo (CSV/Excel)</button>
+    <label class="btn sec" style="margin:0">⬆ Importar respostas (JSON)<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this,CTX.grupoId)"></label></div></div>
+  <div class="card no-print"><h3>Borrar o grupo</h3>
+    <p class="muted" style="margin-bottom:12px">Elimina o grupo, os códigos e todas as respostas de forma definitiva. Descarga antes unha copia se a queres conservar.</p>
+    <button class="btn danger" onclick="delGrupo()">Borrar o grupo</button></div>`;
+}
+async function delResp(id){
+  if (!confirm('Borrar as respostas de '+nm(id)+'? Poderá volver respondelas.')) return;
+  const { error } = await sb.from('sg_respostas').delete().eq('alumno_id', id);
+  if (error) return alert('Erro: '+error.message);
+  openGrupo(CTX.grupoId);
+}
+async function delGrupo(){
+  if (!confirm('Seguro? Borrarase o grupo e todas as súas respostas.')) return;
+  if (prompt('Escribe BORRAR para confirmar') !== 'BORRAR') return;
+  const { error } = await sb.from('sg_grupos').delete().eq('id', CTX.grupoId);
+  if (error) return alert('Erro: '+error.message);
+  loadPanel();
 }
 
-/* ---------------- Datos: exportar / importar ---------------- */
+/* ---------------- Exportar / importar ---------------- */
 function download(name, text, type){
   const b = new Blob([text], {type}); const u = URL.createObjectURL(b);
   const a = document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
@@ -700,7 +964,7 @@ function download(name, text, type){
 }
 const slug = () => norm(S.config.grupo).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'grupo';
 function exportJSON(){
-  download(`sociograma-${slug()}-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({app:'sociograma', v:1, ...S}, null, 2), 'application/json');
+  download(`sociograma-${slug()}-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify({app:'sociograma', v:2, ...S}, null, 2), 'application/json');
 }
 function exportCSV(){
   const {rows, m} = calc();
@@ -712,42 +976,47 @@ function exportCSV(){
   const csv = '﻿' + lines.map(l=>l.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
   download(`sociograma-${slug()}.csv`, csv, 'text/csv;charset=utf-8');
 }
-function importFile(input){
+// Importa un ficheiro exportado (versión local antiga ou esta). Se grupoId é null, crea un grupo novo.
+function importFile(input, grupoId){
   const file = input.files[0]; if (!file) return;
+  input.value = '';
   const rd = new FileReader();
-  rd.onload = () => {
+  rd.onload = async () => {
     let d; try { d = JSON.parse(rd.result); } catch(e){ return alert('O ficheiro non é válido.'); }
     if (!d || !d.config || !Array.isArray(d.config.alumnos) || typeof d.respostas!=='object') return alert('O ficheiro non ten o formato desta aplicación.');
-    if (!S.config){ S = { config:d.config, respostas:d.respostas||{} }; save(); V.unlocked=true; alert('Datos importados.'); go('home'); return; }
-    if (d.config.modelo !== S.config.modelo) return alert('O ficheiro usa outro modelo de cuestionario.');
-    // mapear ids do ficheiro aos ids locais por nome
-    const map = {}; let novos = 0, sen = [];
-    d.config.alumnos.forEach(a=>{ const l = al().find(x=>norm(x.nome)===norm(a.nome)); if (l) map[a.id]=l.id; else sen.push(a.nome); });
-    const tr = id => map[id];
-    for (const [fid, r] of Object.entries(d.respostas)){
-      const lid = tr(fid); if (!lid) continue;
-      const nr = { data:r.data, nom:{}, por:r.por||{}, atr:{}, rank:{} };
-      for (const k in r.nom) nr.nom[k] = (r.nom[k]||[]).map(tr).filter(Boolean);
-      for (const k in r.atr) nr.atr[k] = r.atr[k] ? (tr(r.atr[k])||null) : null;
-      for (const k in r.rank) if (tr(k)) nr.rank[tr(k)] = r.rank[k];
-      const cur = S.respostas[lid];
-      if (!cur || (r.data && cur.data && r.data > cur.data)) { S.respostas[lid] = nr; novos++; }
-    }
-    save();
-    alert(`Importadas ${novos} respostas.` + (sen.length ? `\nNomes non atopados neste grupo: ${sen.join(', ')}` : ''));
-    render();
+    try {
+      let gid = grupoId, local;
+      if (!gid){
+        if (!confirm(`Crear o grupo "${d.config.grupo}" con ${d.config.alumnos.length} alumnos/as e ${Object.keys(d.respostas).length} respostas?`)) return;
+        const g = await createGroup(d.config.grupo || 'Grupo importado', d.config.modelo, d.config.alumnos.map(a=>a.nome));
+        gid = g.id;
+        const { data } = await sb.from('sg_alumnos').select('id,nome').eq('grupo_id', gid);
+        local = data;
+      } else {
+        if (d.config.modelo !== S.config.modelo) return alert('O ficheiro usa outro modelo de cuestionario.');
+        local = al();
+      }
+      const map = {}; const sen = [];
+      d.config.alumnos.forEach(a=>{ const l = local.find(x=>norm(x.nome)===norm(a.nome)); if (l) map[a.id]=l.id; else sen.push(a.nome); });
+      const tr = id => map[id];
+      const rows = [];
+      for (const [fid, r] of Object.entries(d.respostas)){
+        const lid = tr(fid); if (!lid || typeof r!=='object' || (grupoId && S.respostas[lid])) continue;
+        const nr = { nom:{}, por:r.por||{}, atr:{}, rank:{} };
+        for (const k in (r.nom||{})) nr.nom[k] = (r.nom[k]||[]).map(tr).filter(Boolean);
+        for (const k in (r.atr||{})) nr.atr[k] = r.atr[k] ? (tr(r.atr[k])||null) : null;
+        for (const k in (r.rank||{})) if (tr(k)) nr.rank[tr(k)] = r.rank[k];
+        rows.push({ alumno_id:lid, grupo_id:gid, datos:nr, ...(r.data?{creado_en:r.data}:{}) });
+      }
+      if (rows.length){ const { error } = await sb.from('sg_respostas').insert(rows); if (error) throw error; }
+      alert(`Importadas ${rows.length} respostas.` + (sen.length ? `\nNomes non atopados: ${sen.join(', ')}` : ''));
+      openGrupo(gid, grupoId ? 'datos' : 'resumo');
+    } catch(err){ alert('Erro ao importar: '+(err.message||err)); }
   };
   rd.readAsText(file);
-  input.value = '';
-}
-function delResp(id){ if (!confirm('Borrar as respostas de '+nm(id)+'? Poderá volver respondelas.')) return; delete S.respostas[id]; save(); render(); }
-function wipe(){
-  if (!confirm('Seguro? Borraranse o grupo e todas as respostas deste dispositivo.')) return;
-  if (prompt('Escribe BORRAR para confirmar') !== 'BORRAR') return;
-  S = blank(); save(); V.unlocked=false; go('setup');
 }
 
-render();
+boot();
 </script>
 </body>
 </html>
